@@ -187,11 +187,6 @@ export function Sidebar() {
         </button>
       </div>
 
-      {!collapsed && (
-        <div className="p-4 text-xs text-muted-foreground">
-          v0.1 · step 1 of the build
-        </div>
-      )}
     </aside>
   );
 }
