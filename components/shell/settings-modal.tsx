@@ -44,10 +44,14 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
         // w-full + max-w-[calc(100%-2rem)] lets it fill the viewport
         // up to ~900px, but never exceed the viewport.
         // p-0 + overflow-hidden + max-h-[90vh] gives Clerk's inner
-        // scroll areas the canvas they expect.
+        // scroll areas the canvas they expect. The dialog owns the
+        // rounded corners — Clerk's content is clipped to it.
         className="w-full max-w-[calc(100%-2rem)] gap-0 overflow-hidden p-0 sm:max-w-4xl sm:rounded-xl"
         style={{ maxHeight: "90vh" }}
-        showCloseButton={true}
+        // Hide the dialog's built-in close button — Clerk's <UserProfile>
+        // has its own close affordance in the top-right, and stacking
+        // two close buttons on top of each other overlaps badly.
+        showCloseButton={false}
       >
         {/* Visually hidden DialogTitle: required by Radix (and Base UI)
             for screen readers, but Clerk's <UserProfile> has its own
@@ -59,17 +63,20 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
           routing="hash"
           appearance={{
             // Strip Clerk's outer card chrome so the dialog and the Clerk
-            // UI are one surface — no fixed width, no max-width, no
-            // shadow/border/radius on top of the dialog's own.
+            // UI are one surface — no shadow/border/radius on top of the
+            // dialog's own. Every utility is prefixed with `!` so it wins
+            // against Clerk's high-specificity component styles.
             elements: {
-              rootBox: "w-full max-w-none shadow-none border-0 rounded-none",
+              rootBox:
+                "!w-full !max-w-none !shadow-none !border-0 !rounded-none",
               cardBox:
-                "w-full max-w-none shadow-none border-0 rounded-none bg-transparent text-foreground",
-              card: "w-full max-w-none shadow-none border-0 rounded-none bg-transparent",
+                "!w-full !max-w-none !shadow-none !border-0 !rounded-none bg-transparent text-foreground",
+              card:
+                "!w-full !max-w-none !shadow-none !border-0 !rounded-none bg-transparent",
               navbar: "shrink-0 border-r border-border px-2 py-4",
-              scrollBox: "w-full min-w-0",
-              pageScrollBox: "w-full min-w-0 p-4",
-              page: "w-full min-w-0",
+              scrollBox: "!w-full min-w-0",
+              pageScrollBox: "!w-full min-w-0 p-4",
+              page: "!w-full min-w-0",
             },
           }}
         >
