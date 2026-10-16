@@ -5,7 +5,6 @@ import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { themeScript } from "@/lib/theme/theme-script";
-import { DEFAULT_THEME } from "@/lib/theme/themes";
 
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
@@ -28,7 +27,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      data-theme={DEFAULT_THEME}
+      // SSR defaults. The no-FOUC <script> below overrides these from
+      // localStorage before paint, then the React hook on the client keeps
+      // state in sync. suppressHydrationWarning is required because the
+      // attributes the script writes WILL differ from the SSR values.
+      data-base="neutral"
+      data-mode="light"
       suppressHydrationWarning
       className={cn("h-full", "antialiased", geistSans.variable, geistMono.variable, "font-sans", inter.variable)}
     >

@@ -62,10 +62,30 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
         <UserProfile
           routing="hash"
           appearance={{
-            // Strip Clerk's outer card chrome so the dialog and the Clerk
-            // UI are one surface — no shadow/border/radius on top of the
-            // dialog's own. Every utility is prefixed with `!` so it wins
-            // against Clerk's high-specificity component styles.
+            // Color tokens flow from our theme. Clerk accepts CSS var() in
+            // each variable, so when the user picks a different base /
+            // accent / chart / mode, every Clerk component recolors with the
+            // rest of the app — no per-instance prop drilling.
+            //
+            // Note: var(--primary) etc. are OKLCH strings. Clerk's CSS
+            // internally feeds them into its own color-mix / shade
+            // derivations (hover, active, disabled). If those look off in
+            // dev because OKLCH + var() is too exotic, fall back to the
+            // matching key under `elements` with the same value. So far
+            // light + dark are clean.
+            variables: {
+              colorPrimary: "var(--primary)",
+              colorBackground: "var(--background)",
+              colorInput: "var(--input)",
+              colorInputForeground: "var(--muted-foreground)",
+              colorDanger: "var(--destructive)",
+              colorPrimaryForeground: "var(--primary-foreground)",
+              colorForeground: "var(--foreground)",
+              colorNeutral: "var(--border)",
+            },
+            // Layout-only overrides. No color classes here — color is
+            // driven by the variables above. Every utility is prefixed with
+            // `!` so it wins against Clerk's high-specificity styles.
             elements: {
               rootBox:
                 "!w-full !max-w-none !shadow-none !border-0 !rounded-none",

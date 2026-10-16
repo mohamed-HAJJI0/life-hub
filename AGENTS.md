@@ -85,7 +85,6 @@ life-hub/
 │   ├── shell/                    # Sidebar, Topbar, NavLink — used by the lobby layout
 │   │   └── sidebar.tsx           # collapsible sidebar (icon-only / full) — client component
 │   ├── widgets/                  # dashboard widget shells
-│   └── theme-toggle.tsx          # cycle button (domain component, not a primitive)
 │
 ├── lib/                          # infra shared across modules
 │   ├── db/                       # db client + per-module schema files
@@ -100,10 +99,13 @@ life-hub/
 │   ├── activity/                 # activity log + streaks
 │   ├── notifications/            # reminders stub
 │   ├── settings/                 # user settings read/write (DB-backed; Clerk owns the session)
-│   ├── theme/                    # runtime theme system (data, no-FOUC script, hook)
-│   │   ├── themes.ts             # source of truth for theme tokens (4 themes)
-│   │   ├── theme-script.ts       # inline <script> string for <head>
-│   │   └── use-theme.ts          # client hook { theme, setTheme, cycle, themes }
+│   ├── theme/                    # shadcn-style runtime theme system (v3)
+│   │   ├── constants.ts          # STORAGE_KEY + defaults (no React, safe to import from the no-FOUC script)
+│   │   ├── use-theme.ts          # client hook { config, mode, modePref, setBase, setAccent, setChart, setModePref, resetTheme }
+│   │   ├── theme-script.ts       # inline <script> for <head> (no-FOUC + OS color-scheme listener)
+│   │   ├── migration.ts          # v1/v2 ({id, mode?}) → v3 ({base, accent, chart, modePref})
+│   │   ├── shadcn-data.json      # AUTO-GENERATED: 7 bases × 24 accents × 2 modes, from the live registry
+│   │   └── themes.ts             # (deleted; replaced by the JSON + scripts)
 │   ├── utils.ts                  # shadcn `cn()` re-export (from the `cn` package)
 │   ├── export/                   # JSON export/import
 │   ├── time/                     # timezone-aware date utils
@@ -134,7 +136,7 @@ life-hub/
 | A new shadcn primitive | `npx shadcn@latest add <name>` — never hand-roll. Don't bypass `components.json`. |
 | Shell chrome (sidebar, nav) | `app/(lobby)/layout.tsx` — the shell itself lives here, not in `components/`. Sub-components (Sidebar, future Topbar/Rightbar) live in `components/shell/`. Keep the shell a server component; extract only the parts that need client state (Sidebar is the canonical example — it owns the `collapsed` localStorage state). |
 | A theme-aware control (toggle, picker) | `components/<name>.tsx` (root of `components/`) — domain component, not a primitive |
-| A theme color / value / palette | `lib/theme/themes.ts` — single source of truth; CSS in `app/globals.css` mirrors it |
+| A theme color / value / palette | `lib/theme/shadcn-data.json` — single source of truth, **built from the live shadcn registry** by `scripts/fetch-shadcn-data.mjs`. CSS lives in `app/theme-tokens.css` (also auto-generated, 110 selectors). The no-FOUC `<head>` script and the React hook both read this layout. Don't hand-edit colors — see `plans/2026-10-16_2155-shadcn-theme-editor.md`. |
 | The no-FOUC inline script | `lib/theme/theme-script.ts` — invoked from `app/layout.tsx` `<head>` |
 | The `cn()` classname helper | Already wired via `lib/utils.ts` (re-export of the `cn` package). Just import from `@/lib/utils`. |
 | The auth gate / protected routes | `proxy.ts` (root) — Clerk's `clerkMiddleware()`. Public/protected route matchers live here. No per-layout `auth.protect()`. |
@@ -148,7 +150,7 @@ life-hub/
 | Activity / streak logic | `lib/activity/` |
 | Auth session / user identity | **Clerk** (`@clerk/nextjs`). Do not hand-roll `lib/auth/`. The `userId` is available server-side via `await auth()` from `@clerk/nextjs/server`. |
 | User settings read/write | `lib/settings/` (DB-backed; session is Clerk's) |
-| Theme tokens / runtime theme system | `lib/theme/` — see `plans/2026-10-16_1810-install-shadcn-ui-and-theme.md` for the data shape |
+| Theme tokens / runtime theme system | `lib/theme/` + `app/theme-tokens.css` + `scripts/fetch-shadcn-data.mjs` + `scripts/generate-theme-css.mjs` + `scripts/verify-theme-tokens.mjs` — see `plans/2026-10-16_2155-shadcn-theme-editor.md` for the data shape and verification protocol. The Theme tab in `components/shell/settings-tabs/theme-tab-content.tsx` is the only entry point. |
 | Clerk env vars (`CLERK_*`, `NEXT_PUBLIC_CLERK_*`) | `.env.local` (gitignored via `.env*`) |
 | A new project plan | `plans/YYYY-MM-DD_HHMM-<name>.md` + update §4 list |
 

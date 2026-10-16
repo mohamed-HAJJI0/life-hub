@@ -1,19 +1,12 @@
-// Temporary smoke test for the theme system.
+// Home dashboard — first page after sign-in. Today it's a skeleton; the
+// real dashboard (today's reviews, streak, modules) lands in a later
+// milestone. The chart card is here as a temporary visual anchor for the
+// theme editor so users (and reviewers) can see the live chart-1..5
+// colors while picking a theme.
 //
-// Replaced in step 1 of the build (auth + shell + settings — see
-// `plans/2026-10-16_1608-project-plan-and-structure.md`). Until then, this
-// page exists to verify end-to-end:
-//   - shadcn `Button` / `Card` / `Separator` components render
-//   - `<ThemeToggle />` cycles through all 4 themes
-//   - The chosen theme persists across reloads (localStorage `life-hub:theme`)
-//   - No FOUC on reload (no-FOUC <script> applies the theme before paint)
-//
-// Per `AGENTS.md` §5: home dashboard lives in `app/(app)/page.tsx` once the
-// authenticated shell exists. For now it stays at `app/page.tsx` (no auth
-// yet — step 1 will add the `(app)` route group).
+// Per `AGENTS.md` §5: home dashboard lives at `app/(lobby)/page.tsx`
+// (route group, no URL segment).
 
-import { Palette } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -21,87 +14,61 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { THEMES, DEFAULT_THEME } from "@/lib/theme/themes";
 
 export default function Home() {
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-8 p-6 sm:p-10">
-      <header className="flex items-start justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="text-3xl font-semibold tracking-tight">Life Hub</h1>
-          <p className="text-sm text-muted-foreground">
-            Theme system is live. Step 1 of the build (auth + shell + settings) comes next.
-          </p>
-        </div>
-        <ThemeToggle />
+    <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col gap-6 p-6 sm:p-10">
+      <header className="space-y-1">
+        <h1 className="text-3xl font-semibold tracking-tight">Welcome</h1>
+        <p className="text-sm text-muted-foreground">
+          The home dashboard is a skeleton — modules land in a later milestone.
+        </p>
       </header>
 
-      <Separator />
-
-      <section className="grid gap-4 sm:grid-cols-2">
+      <section className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Palette className="size-4" /> Active theme
-            </CardTitle>
+            <CardTitle className="text-base">What's next</CardTitle>
             <CardDescription>
-              Click the palette icon in the header to cycle. Your choice is
-              saved in <code className="font-mono text-xs">localStorage</code>{" "}
-              under the key <code className="font-mono text-xs">life-hub:theme</code>.
+              Open the user menu (top right) → Manage account → Theme to
+              try the shadcn-style theme editor. The chart on the right
+              previews <code className="font-mono text-xs">chart-1..5</code>{" "}
+              in real time.
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <ul className="space-y-1 text-sm">
-              {THEMES.map((t) => (
-                <li
-                  key={t.id}
-                  className="flex items-center justify-between rounded-md border border-border px-3 py-1.5"
-                >
-                  <span className="flex items-center gap-2">
-                    <span
-                      aria-hidden
-                      className="inline-block size-3 rounded-full border border-border"
-                      style={{
-                        background: t.light["--primary"] ?? "transparent",
-                      }}
-                    />
-                    {t.label}
-                  </span>
-                  {t.id === DEFAULT_THEME ? (
-                    <span className="text-xs text-muted-foreground">default</span>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-          </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">What works</CardTitle>
-            <CardDescription>
-              Pieces of the foundation this page exercises.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-1 text-sm">
-              <li>• shadcn <code className="font-mono text-xs">Button</code> + <code className="font-mono text-xs">Card</code> + <code className="font-mono text-xs">Separator</code></li>
-              <li>• Runtime theme system (<code className="font-mono text-xs">lib/theme/</code>)</li>
-              <li>• localStorage persistence under <code className="font-mono text-xs">life-hub:theme</code></li>
-              <li>• No-FOUC inline <code className="font-mono text-xs">&lt;script&gt;</code> in <code className="font-mono text-xs">&lt;head&gt;</code></li>
-              <li>• <code className="font-mono text-xs">lucide-react</code> icons</li>
-            </ul>
-            <div className="mt-4 flex gap-2">
-              <Button size="sm">Default</Button>
-              <Button size="sm" variant="secondary">Secondary</Button>
-              <Button size="sm" variant="outline">Outline</Button>
-              <Button size="sm" variant="ghost">Ghost</Button>
-            </div>
-          </CardContent>
-        </Card>
+        {/* TEMPORARY: visual verification of the theme editor. The chart
+            bars use bg-chart-1..5 to confirm the chart color picker
+            changes them live. Remove this card (or move it behind a
+            dev-only route) once the theme editor is verified. */}
+        <ChartPreviewCard />
       </section>
     </main>
+  );
+}
+
+function ChartPreviewCard() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Chart preview</CardTitle>
+        <CardDescription>
+          <span className="text-xs">
+            TEMPORARY — these bars use{" "}
+            <code className="font-mono">bg-chart-1..5</code>.
+          </span>
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="flex h-32 items-end gap-2">
+          <div className="h-1/4 flex-1 rounded-t bg-chart-1" />
+          <div className="h-2/4 flex-1 rounded-t bg-chart-2" />
+          <div className="h-3/4 flex-1 rounded-t bg-chart-3" />
+          <div className="h-2/3 flex-1 rounded-t bg-chart-4" />
+          <div className="h-1/2 flex-1 rounded-t bg-chart-5" />
+        </div>
+      </CardContent>
+    </Card>
   );
 }

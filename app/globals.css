@@ -1,3 +1,18 @@
+/* Theme tokens (shadcn v4 registry, 7 bases × 24 accents × 24 charts × 2 modes).
+   AUTO-GENERATED — DO NOT EDIT. Regenerate with:
+     node scripts/fetch-shadcn-data.mjs && node scripts/generate-theme-css.mjs
+
+   The 110 selectors that follow have equal specificity (0,3,0) and the
+   later rules win, so the cascade is:
+     1. [data-base]    full token set
+     2. [data-accent]  11 primary-related overrides
+     3. [data-chart]   chart-1..5
+
+   Why this is a separate file: globals.css also carries the @theme inline
+   block, base layer, fonts, radius and shadcn/Clerk imports that aren't theme
+   tokens. Keeping the rules isolated means the rest of globals.css can be
+   edited without re-generating theme-tokens.css. */
+@import "./theme-tokens.css";
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";

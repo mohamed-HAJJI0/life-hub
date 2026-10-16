@@ -2,8 +2,8 @@
 
 // Lobby shell — composed of:
 //   - <Sidebar /> (client component) for the left nav, with collapse/expand
-//   - topbar with <ThemeToggle /> + <UserMenu /> (our Base UI menu wrapper
-//     around the user's avatar — replaces Clerk's <UserButton />)
+//   - topbar with <UserMenu /> (our Base UI menu wrapper around the user's
+//     avatar — replaces Clerk's <UserButton />)
 //   - <SettingsModal /> mounted ONCE at the layout level, opened by either
 //     the sidebar Settings button or the user menu's "Manage account" item
 //   - main content area
@@ -11,6 +11,9 @@
 // URLs covered: / (home), /today.
 // Future module hubs (e.g. /chinese-hub) are NOT wrapped by this layout —
 // they're separate sub-apps (per the user's multi-app model).
+//
+// Theme lives in Settings → Theme (no header toggle). The Settings modal and
+// the user menu can both open the same modal through `SettingsProvider`.
 //
 // Protection: handled in `proxy.ts` via `auth.protect()` on the lobby
 // route matcher. Unauthenticated users get redirected to /login.
@@ -25,7 +28,6 @@ import {
   SettingsProvider,
   useSettings,
 } from "@/components/shell/settings-store";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { UserMenu } from "@/components/shell/user-menu";
 
 export default function LobbyLayout({
@@ -46,7 +48,6 @@ function LobbyShell({ children }: { children: React.ReactNode }) {
       <Sidebar />
       <div className="flex flex-1 flex-col">
         <header className="flex h-14 items-center justify-end gap-2 border-b border-border px-6">
-          <ThemeToggle />
           <UserMenu />
         </header>
         <main className="flex-1 p-6 sm:p-10">{children}</main>
