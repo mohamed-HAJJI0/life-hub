@@ -37,12 +37,16 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        // Wide enough for Clerk's two-column layout (left nav + content).
-        // No internal padding (p-0) — Clerk's own layout handles spacing.
-        // max-h + overflow-hidden so the inner scroll areas work as Clerk
-        // expects (nav scrolls independently of content).
-        className="max-w-4xl gap-0 overflow-hidden p-0 sm:rounded-xl"
-        style={{ maxHeight: "min(90vh, 900px)" }}
+        // sm:max-w-4xl (not just max-w-4xl) overrides shadcn's default
+        // sm:max-w-sm/sm:max-w-lg on the DialogContent base classes —
+        // without the sm: prefix, the base class wins and the dialog
+        // stays ~384px wide, clipping Clerk's two-column layout.
+        // w-full + max-w-[calc(100%-2rem)] lets it fill the viewport
+        // up to ~900px, but never exceed the viewport.
+        // p-0 + overflow-hidden + max-h-[90vh] gives Clerk's inner
+        // scroll areas the canvas they expect.
+        className="w-full max-w-[calc(100%-2rem)] gap-0 overflow-hidden p-0 sm:max-w-4xl sm:rounded-xl"
+        style={{ maxHeight: "90vh" }}
         showCloseButton={true}
       >
         {/* Visually hidden DialogTitle: required by Radix (and Base UI)
@@ -55,15 +59,17 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
           routing="hash"
           appearance={{
             // Strip Clerk's outer card chrome so the dialog and the Clerk
-            // UI are one surface (no double border, no fixed width, no
-            // shadow on top of the dialog's shadow).
+            // UI are one surface — no fixed width, no max-width, no
+            // shadow/border/radius on top of the dialog's own.
             elements: {
-              rootBox: "w-full",
+              rootBox: "w-full max-w-none shadow-none border-0 rounded-none",
               cardBox:
-                "w-full shadow-none border-0 bg-transparent text-foreground",
-              card: "shadow-none border-0 bg-transparent",
-              navbar: "border-r border-border",
-              pageScrollBox: "p-6",
+                "w-full max-w-none shadow-none border-0 rounded-none bg-transparent text-foreground",
+              card: "w-full max-w-none shadow-none border-0 rounded-none bg-transparent",
+              navbar: "shrink-0 border-r border-border px-2 py-4",
+              scrollBox: "w-full min-w-0",
+              pageScrollBox: "w-full min-w-0 p-4",
+              page: "w-full min-w-0",
             },
           }}
         >
