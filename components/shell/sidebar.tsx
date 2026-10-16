@@ -42,7 +42,7 @@ import {
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { SettingsModal } from "@/components/shell/settings-modal";
+import { useSettings } from "@/components/shell/settings-store";
 
 type NavItem = {
   href: string;
@@ -78,7 +78,7 @@ function writeCollapsed(collapsed: boolean) {
 export function Sidebar() {
   // SSR-safe default: expanded. Hydrate from localStorage after mount.
   const [collapsed, setCollapsed] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const { openSettings } = useSettings();
   const pathname = usePathname();
 
   useEffect(() => {
@@ -157,7 +157,7 @@ export function Sidebar() {
         <Separator className="mb-2" />
         <button
           type="button"
-          onClick={() => setSettingsOpen(true)}
+          onClick={() => openSettings()}
           title={collapsed ? "Settings" : undefined}
           aria-label="Open settings"
           className={cn(linkBase, linkIdle)}
@@ -184,12 +184,6 @@ export function Sidebar() {
           {!collapsed && <span className="truncate">Collapse</span>}
         </button>
       </div>
-
-      {/* Settings modal — opened by the Settings button above. Rendered
-          at the bottom of the sidebar so the dialog portal mounts inside
-          the same React subtree that owns the state. The dialog itself
-          uses a fixed-position portal, so layout is unaffected. */}
-      <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
     </aside>
   );
 }

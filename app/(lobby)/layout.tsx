@@ -1,6 +1,11 @@
+"use client";
+
 // Lobby shell — composed of:
 //   - <Sidebar /> (client component) for the left nav, with collapse/expand
-//   - topbar with <ThemeToggle /> + <UserButton />
+//   - topbar with <ThemeToggle /> + <UserMenu /> (our Base UI menu wrapper
+//     around the user's avatar — replaces Clerk's <UserButton />)
+//   - <SettingsModal /> mounted ONCE at the layout level, opened by either
+//     the sidebar Settings button or the user menu's "Manage account" item
 //   - main content area
 //
 // URLs covered: / (home), /today.
@@ -8,35 +13,20 @@
 // they're separate sub-apps (per the user's multi-app model).
 //
 // Protection: handled in `proxy.ts` via `auth.protect()` on the lobby
-// route matcher. Unauthenticated users get redirected to /login (configured
-// in .env.local). Keeping it out of this layout lets the shell stay a static
-// server component (no per-request auth reads → no prerender blocking).
+// route matcher. Unauthenticated users get redirected to /login.
 //
-// Settings is NOT a page — it's a floating modal. Clerk's <UserProfile />
-// is rendered internally by the <UserButton /> in the topbar (the dropdown's
-// "Manage account" item opens it). The sidebar's Settings button triggers
-// the SAME modal via useClerk().openUserProfile(). No URL, no /settings route.
 // Per `AGENTS.md` §5:
-//   - The shell itself lives here; sub-components (Sidebar) live in
-//     `components/shell/`.
+//   - The shell itself lives here; sub-components (Sidebar, UserMenu,
+//     SettingsModal) live in `components/shell/`.
 
-import { UserButton } from "@clerk/nextjs";
 import { Sidebar } from "@/components/shell/sidebar";
+import { SettingsModal } from "@/components/shell/settings-modal";
+import {
+  SettingsProvider,
+  useSettings,
+} from "@/components/shell/settings-store";
 import { ThemeToggle } from "@/components/theme-toggle";
-
-// Styles the UserButton popover menu items to match the sidebar's button
-// look (same height, padding, hover state, muted-background active state).
-// Mirrors the `linkBase` + `linkIdle` classes in components/shell/sidebar.tsx.
-const userButtonAppearance = {
-  elements: {
-    userButtonPopoverActions: "gap-1 p-1",
-    userButtonPopoverActionButton:
-      "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors text-foreground/80 hover:bg-muted hover:text-foreground",
-    userButtonPopoverActionButtonIcon: "size-4",
-    userButtonPopoverActionButtonText: "text-sm",
-    userButtonPopoverFooter: "p-2",
-  },
-};
+import { UserMenu } from "@/components/shell/user-menu";
 
 export default function LobbyLayout({
   children,
@@ -44,15 +34,35 @@ export default function LobbyLayout({
   children: React.ReactNode;
 }) {
   return (
+    <SettingsProvider>
+      <LobbyShell>{children}</LobbyShell>
+    </SettingsProvider>
+  );
+}
+
+function LobbyShell({ children }: { children: React.ReactNode }) {
+  return (
     <div className="flex min-h-screen">
       <Sidebar />
       <div className="flex flex-1 flex-col">
         <header className="flex h-14 items-center justify-end gap-2 border-b border-border px-6">
           <ThemeToggle />
-          <UserButton appearance={userButtonAppearance} />
+          <UserMenu />
         </header>
         <main className="flex-1 p-6 sm:p-10">{children}</main>
       </div>
+      <SettingsModalMount />
     </div>
+  );
+}
+
+// SettingsModal needs the open state from the shared store. Rendered here
+// (not in the sidebar) so both the sidebar and the user menu can trigger it
+// through the same store. The dialog uses a fixed-position portal, so its
+// mount point doesn't affect layout.
+function SettingsModalMount() {
+  const { settingsOpen, setSettingsOpen } = useSettings();
+  return (
+    <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
   );
 }
