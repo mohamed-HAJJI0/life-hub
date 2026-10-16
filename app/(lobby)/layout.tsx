@@ -24,6 +24,20 @@ import { UserButton } from "@clerk/nextjs";
 import { Sidebar } from "@/components/shell/sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
 
+// Styles the UserButton popover menu items to match the sidebar's button
+// look (same height, padding, hover state, muted-background active state).
+// Mirrors the `linkBase` + `linkIdle` classes in components/shell/sidebar.tsx.
+const userButtonAppearance = {
+  elements: {
+    userButtonPopoverActions: "gap-1 p-1",
+    userButtonPopoverActionButton:
+      "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors text-foreground/80 hover:bg-muted hover:text-foreground",
+    userButtonPopoverActionButtonIcon: "size-4",
+    userButtonPopoverActionButtonText: "text-sm",
+    userButtonPopoverFooter: "p-2",
+  },
+};
+
 export default function LobbyLayout({
   children,
 }: {
@@ -35,7 +49,7 @@ export default function LobbyLayout({
       <div className="flex flex-1 flex-col">
         <header className="flex h-14 items-center justify-end gap-2 border-b border-border px-6">
           <ThemeToggle />
-          <UserButton />
+          <UserButton appearance={userButtonAppearance} />
         </header>
         <main className="flex-1 p-6 sm:p-10">{children}</main>
       </div>
