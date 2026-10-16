@@ -1,41 +1,35 @@
-// /settings — placeholder. Real settings (language, timezone, theme picker
-// with swatches, "reset to default", data export) land in the next iteration
-// of step 1. The theme toggle in the topbar already works via localStorage.
+// /settings — Clerk's full account UI.
+//
+// This page is reached from two places, intentionally:
+//   1. The sidebar's "Settings" link at the bottom of the nav.
+//   2. The UserButton dropdown's "Manage account" item (via
+//      `userProfileUrl="/settings"` set on the UserButton in the lobby layout).
+//
+// Both lead here, so the user has one place to manage identity, password,
+// multi-factor auth, connected accounts, and active sessions.
+//
+// The Clerk `<UserProfile />` component is fully themed via the global
+// `<ClerkProvider appearance={{ theme: shadcn }}>` in `app/layout.tsx` —
+// no per-page appearance override needed.
+//
+// Future iterations will add app-level preferences (theme picker, language,
+// timezone) either as a separate section below the profile or as a custom
+// `<UserProfile.Page label="Preferences" />` inside Clerk's UI.
+//
+// `routing="hash"` keeps navigation inside the page (uses URL fragments
+// like /settings#security) instead of changing the path. `routing="path"`
+// would have worked too, but `hash` is friendlier when we add our own
+// sections later.
 
-import { Settings } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { UserProfile } from "@clerk/nextjs";
+import { Suspense } from "react";
 
 export default function SettingsPage() {
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <div>
-        <h1 className="text-3xl font-semibold tracking-tight">Settings</h1>
-        <p className="text-sm text-muted-foreground">
-          Your preferences for Life Hub.
-        </p>
-      </div>
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Settings className="size-4" /> Coming next
-          </CardTitle>
-          <CardDescription>
-            Language, timezone, theme picker with swatches, and a
-            &quot;reset to default&quot; action all land in the next iteration.
-            For now, the cycle button in the topbar already lets you switch
-            themes and persists to <code className="font-mono text-xs">localStorage</code>.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">No settings yet.</p>
-        </CardContent>
-      </Card>
+    <div className="mx-auto max-w-5xl">
+      <Suspense fallback={null}>
+        <UserProfile routing="hash" />
+      </Suspense>
     </div>
   );
 }

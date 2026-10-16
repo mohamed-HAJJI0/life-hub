@@ -47,6 +47,7 @@ The Life Hub project has its own planning lives in a dedicated, **gitignored** f
 - `plans/2026-10-16_1608-project-plan-and-structure.md` — implementation order, file/folder organization, smallest viable cut for step 1
 - `plans/2026-10-16_1810-install-shadcn-ui-and-theme.md` — shadcn/ui install (baseColor: taupe, preset `b2BXFGesy`) + runtime theme system (`lib/theme/`, localStorage key `life-hub:theme`, no-FOUC inline script)
 - `plans/2026-10-16_1838-clerk-auth-and-lobby-shell.md` — Clerk auth (`@clerk/nextjs`, accountless dev, `proxy.ts` gate), `app/(lobby)/` shell + `app/(auth)/` pages, shadcn theme for Clerk components
+- `plans/2026-10-16_1915-collapsible-sidebar-and-unified-settings.md` — collapsible sidebar (`components/shell/sidebar.tsx`, localStorage `life-hub:sidebar-collapsed`) + unified `/settings` (Clerk `<UserProfile />` reached from sidebar and from `UserButton`'s "Manage account" via `userProfileUrl="/settings"`)
 
 ### Hard rule
 
@@ -81,7 +82,8 @@ life-hub/
 │
 ├── components/                   # shared UI, NO module-specific logic
 │   ├── ui/                       # shadcn primitives (Button, Card, Input…) — `npx shadcn@latest add <name>` to grow
-│   ├── shell/                    # Sidebar, Topbar, NavLink
+│   ├── shell/                    # Sidebar, Topbar, NavLink — used by the lobby layout
+│   │   └── sidebar.tsx           # collapsible sidebar (icon-only / full) — client component
 │   ├── widgets/                  # dashboard widget shells
 │   └── theme-toggle.tsx          # cycle button (domain component, not a primitive)
 │
@@ -130,13 +132,14 @@ life-hub/
 | A new life area / module (sub-app) | `app/<name>-hub/page.tsx` (real folder at root URL, e.g. `app/chinese-hub/` → `/chinese-hub`) + `modules/<name>/` for logic. Not wrapped by the lobby shell — each sub-app is independent. |
 | A reusable UI primitive | `components/ui/` (only if it's a shadcn primitive; otherwise `components/<domain>/`) |
 | A new shadcn primitive | `npx shadcn@latest add <name>` — never hand-roll. Don't bypass `components.json`. |
-| Shell chrome (sidebar, nav) | `app/(lobby)/layout.tsx` — the shell itself lives here, not in `components/`. `components/shell/` is reserved for sub-components like Sidebar/Topbar if/when we extract them. |
+| Shell chrome (sidebar, nav) | `app/(lobby)/layout.tsx` — the shell itself lives here, not in `components/`. Sub-components (Sidebar, future Topbar/Rightbar) live in `components/shell/`. Keep the shell a server component; extract only the parts that need client state (Sidebar is the canonical example — it owns the `collapsed` localStorage state). |
 | A theme-aware control (toggle, picker) | `components/<name>.tsx` (root of `components/`) — domain component, not a primitive |
 | A theme color / value / palette | `lib/theme/themes.ts` — single source of truth; CSS in `app/globals.css` mirrors it |
 | The no-FOUC inline script | `lib/theme/theme-script.ts` — invoked from `app/layout.tsx` `<head>` |
 | The `cn()` classname helper | Already wired via `lib/utils.ts` (re-export of the `cn` package). Just import from `@/lib/utils`. |
 | The auth gate / protected routes | `proxy.ts` (root) — Clerk's `clerkMiddleware()`. Public/protected route matchers live here. No per-layout `auth.protect()`. |
 | Auth pages | `app/(auth)/<name>/[[...catchall]]/page.tsx` — wrap Clerk component in `<Suspense>` (Next.js cacheComponents-friendly) |
+| The user-profile / settings page | `app/(lobby)/settings/page.tsx` renders Clerk `<UserProfile />`. Reached from the sidebar's **Settings** link AND from the `<UserButton />` dropdown's "Manage account" item. The latter is unified via `userProfileUrl="/settings"` on `<UserButton />` in the lobby layout. |
 | Database tables shared by all modules | `lib/db/schema/shared.ts` (e.g. `users`, `settings`, `tags`) |
 | Database tables for one module | `lib/db/schema/<module>.ts` (e.g. `chinese_characters`, `chinese_reviews`) — **table names are prefixed by module** |
 | A SQL migration | `db/migrations/NNNN_<name>.sql` |
