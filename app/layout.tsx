@@ -1,3 +1,5 @@
+import { ClerkProvider } from "@clerk/nextjs";
+import { shadcn } from "@clerk/ui/themes";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
@@ -34,7 +36,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         {/* No-FOUC: applies saved theme BEFORE first paint. See lib/theme/theme-script.ts. */}
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <ClerkProvider appearance={{ theme: shadcn }}>
+          {children}
+        </ClerkProvider>
+      </body>
     </html>
   );
 }

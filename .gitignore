@@ -44,3 +44,4 @@ next-env.d.ts
 # see AGENTS.md §4 — "Project plans"
 /plans/
 
+.clerk/

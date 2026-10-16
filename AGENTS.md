@@ -46,6 +46,7 @@ The Life Hub project has its own planning lives in a dedicated, **gitignored** f
 - `plans/2026-10-16_1608-project-organizing-todolist.md` — full checklist (sections 1–5: foundation, module architecture, shared systems, dev hygiene, build order)
 - `plans/2026-10-16_1608-project-plan-and-structure.md` — implementation order, file/folder organization, smallest viable cut for step 1
 - `plans/2026-10-16_1810-install-shadcn-ui-and-theme.md` — shadcn/ui install (baseColor: taupe, preset `b2BXFGesy`) + runtime theme system (`lib/theme/`, localStorage key `life-hub:theme`, no-FOUC inline script)
+- `plans/2026-10-16_1838-clerk-auth-and-lobby-shell.md` — Clerk auth (`@clerk/nextjs`, accountless dev, `proxy.ts` gate), `app/(lobby)/` shell + `app/(auth)/` pages, shadcn theme for Clerk components
 
 ### Hard rule
 
@@ -60,20 +61,23 @@ This is the canonical layout. The full rationale lives in `plans/2026-10-16_1608
 ```
 life-hub/
 ├── app/                          # Next.js App Router — routes only, stay thin
-│   ├── (auth)/                   # unauthenticated: sign-in, sign-up
-│   ├── (app)/                    # authenticated shell
-│   │   ├── layout.tsx            # sidebar + topbar
-│   │   ├── page.tsx              # home dashboard
-│   │   ├── today/page.tsx        # aggregate "what's due today"
-│   │   ├── settings/page.tsx
-│   │   └── modules/              # one folder per life area
-│   │       ├── _registry.ts      # module registry — single source of truth
-│   │       ├── chinese/          # module 1
-│   │       ├── tasks/            # module 2 (later)
-│   │       └── habits/           # module 3 (later)
+│   ├── (auth)/                   # route group (no /auth URL segment) — public auth pages
+│   │   ├── layout.tsx            # minimal centered layout
+│   │   ├── login/[[...sign-in]]/page.tsx        # /login — Clerk <SignIn />
+│   │   ├── signup/[[...sign-up]]/page.tsx       # /signup — Clerk <SignUp />
+│   │   ├── reset-password/[[...reset-password]]/page.tsx  # /reset-password
+│   │   └── verify-email/[[...verify]]/page.tsx  # /verify-email
+│   ├── (lobby)/                  # route group (no /lobby URL segment) — main app, protected
+│   │   ├── layout.tsx            # sidebar + topbar (the "shell")
+│   │   ├── page.tsx              # / (home dashboard)
+│   │   ├── today/page.tsx        # /today — aggregate "what's due today"
+│   │   └── settings/page.tsx     # /settings
+│   ├── chinese-hub/              # (future) real folder, URL = /chinese-hub — separate sub-app
 │   ├── api/                      # route handlers (if not using server actions)
 │   ├── globals.css
-│   └── layout.tsx
+│   └── layout.tsx                # root: fonts + no-FOUC + <ClerkProvider>
+│
+├── proxy.ts                      # Clerk middleware (auth gate) — runs on every request
 │
 ├── components/                   # shared UI, NO module-specific logic
 │   ├── ui/                       # shadcn primitives (Button, Card, Input…) — `npx shadcn@latest add <name>` to grow
@@ -93,8 +97,7 @@ life-hub/
 │   │   └── review.ts             # recordReview(itemId, grade)
 │   ├── activity/                 # activity log + streaks
 │   ├── notifications/            # reminders stub
-│   ├── auth/                     # session + helpers
-│   ├── settings/                 # user settings read/write
+│   ├── settings/                 # user settings read/write (DB-backed; Clerk owns the session)
 │   ├── theme/                    # runtime theme system (data, no-FOUC script, hook)
 │   │   ├── themes.ts             # source of truth for theme tokens (4 themes)
 │   │   ├── theme-script.ts       # inline <script> string for <head>
@@ -123,25 +126,27 @@ life-hub/
 
 | If you're adding… | It goes in… |
 |---|---|
-| A new page or route | `app/(app)/modules/<module>/page.tsx` (or `app/(app)/` for top-level) |
-| A new life area / module | Add a folder under `app/(app)/modules/<name>/` + `modules/<name>/` for logic + an entry in `app/(app)/modules/_registry.ts` |
+| A new page or route | `app/(lobby)/<name>/page.tsx` (for shell-wrapped pages) or `app/(auth)/<name>/page.tsx` (for public auth pages) |
+| A new life area / module (sub-app) | `app/<name>-hub/page.tsx` (real folder at root URL, e.g. `app/chinese-hub/` → `/chinese-hub`) + `modules/<name>/` for logic. Not wrapped by the lobby shell — each sub-app is independent. |
 | A reusable UI primitive | `components/ui/` (only if it's a shadcn primitive; otherwise `components/<domain>/`) |
 | A new shadcn primitive | `npx shadcn@latest add <name>` — never hand-roll. Don't bypass `components.json`. |
-| Shell chrome (sidebar, nav) | `components/shell/` |
-| A dashboard widget | `components/widgets/` + a widget component referenced from the module's registry entry |
+| Shell chrome (sidebar, nav) | `app/(lobby)/layout.tsx` — the shell itself lives here, not in `components/`. `components/shell/` is reserved for sub-components like Sidebar/Topbar if/when we extract them. |
 | A theme-aware control (toggle, picker) | `components/<name>.tsx` (root of `components/`) — domain component, not a primitive |
 | A theme color / value / palette | `lib/theme/themes.ts` — single source of truth; CSS in `app/globals.css` mirrors it |
 | The no-FOUC inline script | `lib/theme/theme-script.ts` — invoked from `app/layout.tsx` `<head>` |
 | The `cn()` classname helper | Already wired via `lib/utils.ts` (re-export of the `cn` package). Just import from `@/lib/utils`. |
+| The auth gate / protected routes | `proxy.ts` (root) — Clerk's `clerkMiddleware()`. Public/protected route matchers live here. No per-layout `auth.protect()`. |
+| Auth pages | `app/(auth)/<name>/[[...catchall]]/page.tsx` — wrap Clerk component in `<Suspense>` (Next.js cacheComponents-friendly) |
 | Database tables shared by all modules | `lib/db/schema/shared.ts` (e.g. `users`, `settings`, `tags`) |
 | Database tables for one module | `lib/db/schema/<module>.ts` (e.g. `chinese_characters`, `chinese_reviews`) — **table names are prefixed by module** |
 | A SQL migration | `db/migrations/NNNN_<name>.sql` |
 | Domain logic for a module (add/get/log) | `modules/<module>/service.ts` |
 | Anything that knows "what's due today" | `lib/scheduler/` — modules plug in via a `dueSource` function |
 | Activity / streak logic | `lib/activity/` |
-| Auth helpers, session | `lib/auth/` |
-| User settings read/write | `lib/settings/` |
+| Auth session / user identity | **Clerk** (`@clerk/nextjs`). Do not hand-roll `lib/auth/`. The `userId` is available server-side via `await auth()` from `@clerk/nextjs/server`. |
+| User settings read/write | `lib/settings/` (DB-backed; session is Clerk's) |
 | Theme tokens / runtime theme system | `lib/theme/` — see `plans/2026-10-16_1810-install-shadcn-ui-and-theme.md` for the data shape |
+| Clerk env vars (`CLERK_*`, `NEXT_PUBLIC_CLERK_*`) | `.env.local` (gitignored via `.env*`) |
 | A new project plan | `plans/YYYY-MM-DD_HHMM-<name>.md` + update §4 list |
 
 ### shadcn/ui
@@ -152,6 +157,16 @@ We use [shadcn/ui](https://ui.shadcn.com/) for UI primitives. The model:
 - The CLI uses `@base-ui/react` (Base UI) for primitives, not Radix UI. Don't replace it.
 - **Never bypass `components.json`** — if a primitive needs new config (e.g. a different icon library), update it there.
 - Current config: `style: base-nova`, `baseColor: taupe` (preset `b2BXFGesy`), `iconLibrary: lucide`.
+
+### Clerk (auth)
+
+We use [Clerk](https://clerk.com) for authentication — no hand-rolled `lib/auth/`. The model:
+- `<ClerkProvider>` wraps `{children}` in `app/layout.tsx` (inside `<body>`, per Clerk's critical rule).
+- `proxy.ts` at the project root is the global middleware (`clerkMiddleware()`) — it gates protected routes via `createRouteMatcher` and `auth.protect()`. Don't put `auth.protect()` in layouts; the middleware handles it.
+- Auth pages live under `app/(auth)/` as route groups so URLs are clean (`/login`, `/signup`, `/reset-password`, `/verify-email` — no `/auth/` prefix). All catch-all pages wrap the Clerk component in `<Suspense>` (Next.js cacheComponents requirement; the `dynamic = "force-dynamic"` export is not compatible with cacheComponents).
+- Clerk UI matches shadcn via `<ClerkProvider appearance={{ theme: shadcn }}>` and `@import "@clerk/ui/themes/shadcn.css";` in `app/globals.css`.
+- Dev keys are written to `.env.local` by `npx -y clerk@latest init --no-skills` (accountless mode — no account or CLI login required). When ready for production, the user runs `npx -y clerk@latest auth login` to claim the app, then `npx -y clerk@latest env pull --instance prod` to fetch prod keys.
+- The current dev app is accountless; URLs in `.env.local`: `NEXT_PUBLIC_CLERK_SIGN_IN_URL=/login`, `NEXT_PUBLIC_CLERK_SIGN_UP_URL=/signup`, both fall back to `/` on success.
 
 ### Module registry (the central pattern)
 
