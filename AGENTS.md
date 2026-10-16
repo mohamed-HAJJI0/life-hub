@@ -44,6 +44,7 @@ The Life Hub project has its own planning lives in a dedicated, **gitignored** f
 
 - `plans/2026-10-16_1608-project-organizing-todolist.md` — full checklist (sections 1–5: foundation, module architecture, shared systems, dev hygiene, build order)
 - `plans/2026-10-16_1608-project-plan-and-structure.md` — implementation order, file/folder organization, smallest viable cut for step 1
+- `plans/2026-10-16_1810-install-shadcn-ui-and-theme.md` — shadcn/ui install (baseColor: taupe, preset `b2BXFGesy`) + runtime theme system (`lib/theme/`, localStorage key `life-hub:theme`, no-FOUC inline script)
 
 ### Hard rule
 
@@ -74,9 +75,10 @@ life-hub/
 │   └── layout.tsx
 │
 ├── components/                   # shared UI, NO module-specific logic
-│   ├── ui/                       # primitives: Button, Card, Input, Dialog…
+│   ├── ui/                       # shadcn primitives (Button, Card, Input…) — `npx shadcn@latest add <name>` to grow
 │   ├── shell/                    # Sidebar, Topbar, NavLink
-│   └── widgets/                  # dashboard widget shells
+│   ├── widgets/                  # dashboard widget shells
+│   └── theme-toggle.tsx          # cycle button (domain component, not a primitive)
 │
 ├── lib/                          # infra shared across modules
 │   ├── db/                       # db client + per-module schema files
@@ -92,6 +94,11 @@ life-hub/
 │   ├── notifications/            # reminders stub
 │   ├── auth/                     # session + helpers
 │   ├── settings/                 # user settings read/write
+│   ├── theme/                    # runtime theme system (data, no-FOUC script, hook)
+│   │   ├── themes.ts             # source of truth for theme tokens (4 themes)
+│   │   ├── theme-script.ts       # inline <script> string for <head>
+│   │   └── use-theme.ts          # client hook { theme, setTheme, cycle, themes }
+│   ├── utils.ts                  # shadcn `cn()` re-export (from the `cn` package)
 │   ├── export/                   # JSON export/import
 │   ├── time/                     # timezone-aware date utils
 │   └── types/                    # cross-cutting TS types
@@ -106,6 +113,7 @@ life-hub/
 ├── public/                       # static + PWA assets (manifest.json, sw.js)
 │
 ├── plans/                        # gitignored local working plans
+├── components.json               # shadcn config — `style`, `baseColor`, `aliases`, `iconLibrary`. Source of truth; committed.
 ├── AGENTS.md
 └── package.json
 ```
@@ -116,9 +124,14 @@ life-hub/
 |---|---|
 | A new page or route | `app/(app)/modules/<module>/page.tsx` (or `app/(app)/` for top-level) |
 | A new life area / module | Add a folder under `app/(app)/modules/<name>/` + `modules/<name>/` for logic + an entry in `app/(app)/modules/_registry.ts` |
-| A reusable UI primitive | `components/ui/` |
+| A reusable UI primitive | `components/ui/` (only if it's a shadcn primitive; otherwise `components/<domain>/`) |
+| A new shadcn primitive | `npx shadcn@latest add <name>` — never hand-roll. Don't bypass `components.json`. |
 | Shell chrome (sidebar, nav) | `components/shell/` |
 | A dashboard widget | `components/widgets/` + a widget component referenced from the module's registry entry |
+| A theme-aware control (toggle, picker) | `components/<name>.tsx` (root of `components/`) — domain component, not a primitive |
+| A theme color / value / palette | `lib/theme/themes.ts` — single source of truth; CSS in `app/globals.css` mirrors it |
+| The no-FOUC inline script | `lib/theme/theme-script.ts` — invoked from `app/layout.tsx` `<head>` |
+| The `cn()` classname helper | Already wired via `lib/utils.ts` (re-export of the `cn` package). Just import from `@/lib/utils`. |
 | Database tables shared by all modules | `lib/db/schema/shared.ts` (e.g. `users`, `settings`, `tags`) |
 | Database tables for one module | `lib/db/schema/<module>.ts` (e.g. `chinese_characters`, `chinese_reviews`) — **table names are prefixed by module** |
 | A SQL migration | `db/migrations/NNNN_<name>.sql` |
@@ -127,7 +140,17 @@ life-hub/
 | Activity / streak logic | `lib/activity/` |
 | Auth helpers, session | `lib/auth/` |
 | User settings read/write | `lib/settings/` |
+| Theme tokens / runtime theme system | `lib/theme/` — see `plans/2026-10-16_1810-install-shadcn-ui-and-theme.md` for the data shape |
 | A new project plan | `plans/YYYY-MM-DD_HHMM-<name>.md` + update §4 list |
+
+### shadcn/ui
+
+We use [shadcn/ui](https://ui.shadcn.com/) for UI primitives. The model:
+- `npx shadcn@latest init` writes `components.json` (config — committed) and `lib/utils.ts` (`cn` helper).
+- `npx shadcn@latest add <name>` drops a copy of the component into `components/ui/`. We OWN the code; we edit it freely.
+- The CLI uses `@base-ui/react` (Base UI) for primitives, not Radix UI. Don't replace it.
+- **Never bypass `components.json`** — if a primitive needs new config (e.g. a different icon library), update it there.
+- Current config: `style: base-nova`, `baseColor: taupe` (preset `b2BXFGesy`), `iconLibrary: lucide`.
 
 ### Module registry (the central pattern)
 
