@@ -109,7 +109,7 @@ export function Sidebar() {
     <aside
       aria-label="Primary navigation"
       className={cn(
-        "flex flex-col border-r border-border bg-card transition-[width] duration-200",
+        "sticky top-0 flex h-screen flex-col border-r border-border bg-card transition-[width] duration-200",
         collapsed ? "w-16" : "w-64",
       )}
     >
