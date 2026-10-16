@@ -22,6 +22,7 @@ Reversible safety net: git has an `init` commit; never commit or discard anythin
 
 ## 2. After an approved plan is applied
 
+- **Commit on the current feature branch.** The user works in a "commit after each apply" cadence — every approved plan lands as its own commit (or a small number of focused commits) on the active feature branch before any unrelated work. Push when it makes sense (new branch, end of a step, etc.); local commit is the minimum.
 - Verify the result: run build / lint / tests when the change warrants it.
 - Summarize what actually changed vs. what was planned (including anything skipped).
 
