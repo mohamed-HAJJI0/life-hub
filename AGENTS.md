@@ -47,7 +47,8 @@ The Life Hub project has its own planning lives in a dedicated, **gitignored** f
 - `plans/2026-10-16_1608-project-plan-and-structure.md` — implementation order, file/folder organization, smallest viable cut for step 1
 - `plans/2026-10-16_1810-install-shadcn-ui-and-theme.md` — shadcn/ui install (baseColor: taupe, preset `b2BXFGesy`) + runtime theme system (`lib/theme/`, localStorage key `life-hub:theme`, no-FOUC inline script)
 - `plans/2026-10-16_1838-clerk-auth-and-lobby-shell.md` — Clerk auth (`@clerk/nextjs`, accountless dev, `proxy.ts` gate), `app/(lobby)/` shell + `app/(auth)/` pages, shadcn theme for Clerk components
-- `plans/2026-10-16_1915-collapsible-sidebar-and-unified-settings.md` — collapsible sidebar (`components/shell/sidebar.tsx`, localStorage `life-hub:sidebar-collapsed`) + unified `/settings` (Clerk `<UserProfile />` reached from sidebar and from `UserButton`'s "Manage account" via `userProfileUrl="/settings"`)
+- `plans/2026-10-16_1915-collapsible-sidebar-and-unified-settings.md` — collapsible sidebar (`components/shell/sidebar.tsx`, localStorage `life-hub:sidebar-collapsed`) + unified `/settings` (Clerk `<UserProfile />` reached from sidebar and from `UserButton`'s "Manage account" via `userProfileUrl="/settings"`) — **superseded by `2026-10-16_1935-floating-userprofile-modal.md`** (no page, modal only)
+- `plans/2026-10-16_1935-floating-userprofile-modal.md` — Settings button calls `useClerk().openUserProfile()` to open Clerk's `<UserProfile />` as a floating modal; no `/settings` page
 
 ### Hard rule
 
@@ -71,8 +72,7 @@ life-hub/
 │   ├── (lobby)/                  # route group (no /lobby URL segment) — main app, protected
 │   │   ├── layout.tsx            # sidebar + topbar (the "shell")
 │   │   ├── page.tsx              # / (home dashboard)
-│   │   ├── today/page.tsx        # /today — aggregate "what's due today"
-│   │   └── settings/page.tsx     # /settings
+│   │   └── today/page.tsx        # /today — aggregate "what's due today"
 │   ├── chinese-hub/              # (future) real folder, URL = /chinese-hub — separate sub-app
 │   ├── api/                      # route handlers (if not using server actions)
 │   ├── globals.css
@@ -139,7 +139,7 @@ life-hub/
 | The `cn()` classname helper | Already wired via `lib/utils.ts` (re-export of the `cn` package). Just import from `@/lib/utils`. |
 | The auth gate / protected routes | `proxy.ts` (root) — Clerk's `clerkMiddleware()`. Public/protected route matchers live here. No per-layout `auth.protect()`. |
 | Auth pages | `app/(auth)/<name>/[[...catchall]]/page.tsx` — wrap Clerk component in `<Suspense>` (Next.js cacheComponents-friendly) |
-| The user-profile / settings page | `app/(lobby)/settings/page.tsx` renders Clerk `<UserProfile />`. Reached from the sidebar's **Settings** link AND from the `<UserButton />` dropdown's "Manage account" item. The latter is unified via `userProfileUrl="/settings"` on `<UserButton />` in the lobby layout. |
+| The user-profile / settings modal | **No page.** Triggered by the sidebar's **Settings** button (via `useClerk().openUserProfile()`) OR by the `<UserButton />` dropdown's "Manage account" item (Clerk's default). Clerk's `<UserProfile />` renders as a floating modal — no URL, no `/settings` route. |
 | Database tables shared by all modules | `lib/db/schema/shared.ts` (e.g. `users`, `settings`, `tags`) |
 | Database tables for one module | `lib/db/schema/<module>.ts` (e.g. `chinese_characters`, `chinese_reviews`) — **table names are prefixed by module** |
 | A SQL migration | `db/migrations/NNNN_<name>.sql` |

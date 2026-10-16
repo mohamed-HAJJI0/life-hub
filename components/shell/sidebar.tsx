@@ -32,6 +32,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useClerk } from "@clerk/nextjs";
 import {
   CalendarDays,
   ChevronsLeft,
@@ -78,6 +79,7 @@ export function Sidebar() {
   // SSR-safe default: expanded. Hydrate from localStorage after mount.
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
+  const clerk = useClerk();
 
   useEffect(() => {
     setCollapsed(readCollapsed());
@@ -148,20 +150,23 @@ export function Sidebar() {
       {/* Spacer pushes the bottom group to the bottom */}
       <div className="flex-1" />
 
-      {/* Bottom group: Settings + collapse toggle */}
+      {/* Bottom group: Settings (opens Clerk <UserProfile /> as a floating modal)
+          + collapse toggle. Settings is NOT a page — Clerk's <UserProfile />
+          component is rendered internally by the <UserButton /> in the topbar
+          (via the "Manage account" item) and we trigger the same modal from
+          here via useClerk().openUserProfile(). No URL state. */}
       <div className="flex flex-col gap-1 p-3">
         <Separator className="mb-2" />
-        <Link
-          href="/settings"
+        <button
+          type="button"
+          onClick={() => clerk.openUserProfile()}
           title={collapsed ? "Settings" : undefined}
-          className={cn(
-            linkBase,
-            isActive("/settings") ? linkActive : linkIdle,
-          )}
+          aria-label="Open settings"
+          className={cn(linkBase, linkIdle)}
         >
           <SettingsIcon className="size-4 shrink-0" />
           {!collapsed && <span className="truncate">Settings</span>}
-        </Link>
+        </button>
         <button
           type="button"
           onClick={toggle}
