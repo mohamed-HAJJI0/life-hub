@@ -1,16 +1,22 @@
 // Global Clerk middleware. Runs on every request that matches the `config.matcher`.
 //
 // Protection model:
-//   - Public (anyone, signed in or not): /, /login, /signup, /reset-password,
-//     /verify-email, and any future `/sign-in/*` Clerk paths.
+//   - Public (anyone, signed in or not): /login, /signup, /reset-password,
+//     /verify-email, and Clerk's /sso-callback.
 //   - Protected (sign-in required): every other route — currently /, /today,
-//     /settings, plus future module hubs at the root like /chinese-hub.
+//     plus future module hubs at the root like /chinese-hub.
 //
-// `auth.protect()` redirects unauthenticated users to the sign-in URL
-// configured in `.env.local` (`NEXT_PUBLIC_CLERK_SIGN_IN_URL=/login`).
+// `auth.protect({ unauthenticatedUrl: '/login' })` redirects unauthenticated
+// users to OUR /login page (not Clerk's default /sign-in, which 404s since
+// we don't have that route). Built as an absolute URL because Next.js
+// requires it in middleware.
 //
 // `createRouteMatcher` matches by URL path, not folder name, so route
 // groups like `app/(lobby)/` don't add to the URL.
+//
+// Note: Clerk v7 deprecates `createRouteMatcher` in favor of resource-based
+// auth checks. We stay on the current API for now; will migrate when Clerk
+// ships the replacement.
 //
 // Per `AGENTS.md` §5: auth lives in `proxy.ts` (Clerk's middleware) — no
 // hand-rolled `lib/auth/`, no per-layout `auth.protect()`.
@@ -24,13 +30,15 @@ const isPublicRoute = createRouteMatcher([
   "/reset-password(.*)",
   "/verify-email(.*)",
   "/sso-callback(.*)",
-  "/sign-in(.*)",
-  "/sign-up(.*)",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
   if (!isPublicRoute(req)) {
-    await auth.protect();
+    // Redirect unauthenticated users to our /login page (not Clerk's default
+    // /sign-in, which would 404 since we don't have that route).
+    // Next.js requires absolute URLs in middleware, so build one off req.url.
+    const loginUrl = new URL("/login", req.url).toString();
+    await auth.protect({ unauthenticatedUrl: loginUrl });
   }
 });
 

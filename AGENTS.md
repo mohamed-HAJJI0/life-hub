@@ -139,7 +139,7 @@ life-hub/
 | The `cn()` classname helper | Already wired via `lib/utils.ts` (re-export of the `cn` package). Just import from `@/lib/utils`. |
 | The auth gate / protected routes | `proxy.ts` (root) — Clerk's `clerkMiddleware()`. Public/protected route matchers live here. No per-layout `auth.protect()`. |
 | Auth pages | `app/(auth)/<name>/[[...catchall]]/page.tsx` — wrap Clerk component in `<Suspense>` (Next.js cacheComponents-friendly) |
-| The user-profile / settings modal | **No page.** Triggered by the sidebar's **Settings** button (via `useClerk().openUserProfile()`) OR by the `<UserButton />` dropdown's "Manage account" item (Clerk's default). Clerk's `<UserProfile />` renders as a floating modal — no URL, no `/settings` route. |
+| The user-profile / settings modal | **Our shadcn `<Dialog>`** wraps Clerk's `<UserProfile routing="hash">` (`components/shell/settings-modal.tsx`). Sidebar Settings button toggles local `settingsOpen` state. Custom tabs (e.g. Theme) declared as `<UserProfile.Page>` children with their own content files under `components/shell/settings-tabs/`. `<UserButton />` "Manage account" still works (Clerk renders its own user-profile modal by default — to use the same one, mount `<SettingsModal />` next to the `<UserButton />` and route through it). |
 | Database tables shared by all modules | `lib/db/schema/shared.ts` (e.g. `users`, `settings`, `tags`) |
 | Database tables for one module | `lib/db/schema/<module>.ts` (e.g. `chinese_characters`, `chinese_reviews`) — **table names are prefixed by module** |
 | A SQL migration | `db/migrations/NNNN_<name>.sql` |

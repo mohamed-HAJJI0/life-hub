@@ -32,7 +32,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useClerk } from "@clerk/nextjs";
 import {
   CalendarDays,
   ChevronsLeft,
@@ -43,6 +42,7 @@ import {
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { SettingsModal } from "@/components/shell/settings-modal";
 
 type NavItem = {
   href: string;
@@ -78,8 +78,8 @@ function writeCollapsed(collapsed: boolean) {
 export function Sidebar() {
   // SSR-safe default: expanded. Hydrate from localStorage after mount.
   const [collapsed, setCollapsed] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const pathname = usePathname();
-  const clerk = useClerk();
 
   useEffect(() => {
     setCollapsed(readCollapsed());
@@ -150,16 +150,14 @@ export function Sidebar() {
       {/* Spacer pushes the bottom group to the bottom */}
       <div className="flex-1" />
 
-      {/* Bottom group: Settings (opens Clerk <UserProfile /> as a floating modal)
-          + collapse toggle. Settings is NOT a page — Clerk's <UserProfile />
-          component is rendered internally by the <UserButton /> in the topbar
-          (via the "Manage account" item) and we trigger the same modal from
-          here via useClerk().openUserProfile(). No URL state. */}
+      {/* Bottom group: Settings (opens our <SettingsModal />, which wraps
+          Clerk's <UserProfile /> with our shadcn <Dialog> + a Theme tab)
+          + collapse toggle. Settings is NOT a page — no URL change. */}
       <div className="flex flex-col gap-1 p-3">
         <Separator className="mb-2" />
         <button
           type="button"
-          onClick={() => clerk.openUserProfile()}
+          onClick={() => setSettingsOpen(true)}
           title={collapsed ? "Settings" : undefined}
           aria-label="Open settings"
           className={cn(linkBase, linkIdle)}
@@ -187,6 +185,11 @@ export function Sidebar() {
         </button>
       </div>
 
+      {/* Settings modal — opened by the Settings button above. Rendered
+          at the bottom of the sidebar so the dialog portal mounts inside
+          the same React subtree that owns the state. The dialog itself
+          uses a fixed-position portal, so layout is unaffected. */}
+      <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
     </aside>
   );
 }
