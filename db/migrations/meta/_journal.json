@@ -15,6 +15,13 @@
       "when": 1792490842084,
       "tag": "0001_drop_tags",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792490891943,
+      "tag": "0002_add_theme_to_settings",
+      "breakpoints": true
     }
   ]
 }

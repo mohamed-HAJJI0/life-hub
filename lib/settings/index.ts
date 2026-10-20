@@ -16,11 +16,20 @@ import { settings, users } from "@/lib/db/schema";
 export type UserSettings = {
   language: string;
   timezone: string;
+  /** Theme — the account-wide default. See the note on the table. */
+  themeBase: string;
+  themeAccent: string;
+  themeChart: string;
+  themeMode: string;
 };
 
 export const DEFAULT_USER_SETTINGS: UserSettings = {
   language: "en",
   timezone: "UTC",
+  themeBase: "neutral",
+  themeAccent: "default",
+  themeChart: "default",
+  themeMode: "system",
 };
 
 /**
@@ -44,7 +53,14 @@ export async function getUserSettings(userId: string): Promise<UserSettings> {
   const row = rows[0];
   if (!row) return DEFAULT_USER_SETTINGS;
 
-  return { language: row.language, timezone: row.timezone };
+  return {
+    language: row.language,
+    timezone: row.timezone,
+    themeBase: row.themeBase,
+    themeAccent: row.themeAccent,
+    themeChart: row.themeChart,
+    themeMode: row.themeMode,
+  };
 }
 
 /**
@@ -104,6 +120,12 @@ export async function upsertUserSettings(
   const changed = {
     ...(patch.language !== undefined ? { language: patch.language } : {}),
     ...(patch.timezone !== undefined ? { timezone: patch.timezone } : {}),
+    ...(patch.themeBase !== undefined ? { themeBase: patch.themeBase } : {}),
+    ...(patch.themeAccent !== undefined
+      ? { themeAccent: patch.themeAccent }
+      : {}),
+    ...(patch.themeChart !== undefined ? { themeChart: patch.themeChart } : {}),
+    ...(patch.themeMode !== undefined ? { themeMode: patch.themeMode } : {}),
   };
 
   await db

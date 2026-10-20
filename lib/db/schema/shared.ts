@@ -27,10 +27,12 @@ export const users = pgTable("users", {
 /**
  * DB-backed user preferences, 1:1 with `users`.
  *
- * Note what is NOT here: the theme. The theme lives in localStorage because
- * the no-FOUC `<head>` script must read it synchronously *before first paint*
- * — a database round-trip cannot do that. Theme is a device preference;
- * language and timezone are account preferences and follow the user.
+ * The theme lives here too, but localStorage remains the *device-local
+ * override* for it: the no-FOUC `<head>` script must read the theme
+ * synchronously *before first paint*, and a database round-trip cannot do
+ * that. The DB copy is the account-wide default (applied by the server, so
+ * a new device starts on the right theme); the localStorage copy is what the
+ * user last chose on this device.
  */
 export const settings = pgTable("settings", {
   userId: text("user_id")
@@ -38,6 +40,11 @@ export const settings = pgTable("settings", {
     .references(() => users.id, { onDelete: "cascade" }),
   language: text("language").notNull().default("en"),
   timezone: text("timezone").notNull().default("UTC"),
+  // Theme — the v3 shape: base + accent + chart + mode preference.
+  themeBase: text("theme_base").notNull().default("neutral"),
+  themeAccent: text("theme_accent").notNull().default("default"),
+  themeChart: text("theme_chart").notNull().default("default"),
+  themeMode: text("theme_mode").notNull().default("system"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

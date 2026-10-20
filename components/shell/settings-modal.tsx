@@ -31,13 +31,16 @@ import { LanguageTabContent } from "@/components/shell/settings-tabs/language-ta
 import { TimezoneTabContent } from "@/components/shell/settings-tabs/timezone-tab-content";
 import { useSettings } from "@/components/shell/settings-store";
 import { getDictionary, t, type Locale } from "@/lib/i18n";
+import type { ThemeConfig } from "@/lib/theme/use-theme";
 
 export function SettingsModal({
   locale,
   timezone,
+  theme,
 }: {
   locale: Locale;
   timezone: string;
+  theme: ThemeConfig;
 }) {
   // The open state lives in the shared settings store so the sidebar's
   // Settings button and the user menu's "Manage account" item open the
@@ -116,7 +119,7 @@ export function SettingsModal({
             labelIcon={<Palette className="size-4" />}
             url="theme"
           >
-            <ThemeTabContent />
+            <ThemeTabContent theme={theme} />
           </UserProfile.Page>
           <UserProfile.Page
             label={t(dict, "settings.tab.language")}

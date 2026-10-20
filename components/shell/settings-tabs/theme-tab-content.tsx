@@ -6,11 +6,22 @@
 //
 // All theme data (label + dot color) comes from `lib/theme/shadcn-data.json`.
 // The three selectors call the same setters the previous grid used, so live
-// apply + localStorage persistence + the no-FOUC <script> stay in sync.
+// apply + persistence + the no-FOUC <script> stay in sync.
+//
+// The theme lives in TWO places:
+//   - localStorage ("life-hub:theme") — the per-device choice. The no-FOUC
+//     script can only read this before first paint, so it wins on the device
+//     where the user made the choice.
+//   - the database (settings.theme_*) — the account-wide default. The
+//     `theme` prop is that value; it is what a NEW device starts on.
+//
+// Every explicit change here writes to both.
 //
 // Per AGENTS.md §5: each tab's content lives in its own file. Mounted in
 // `settings-modal.tsx`.
 
+import { useRouter } from "next/navigation";
+import { useTransition } from "react";
 import { ChevronDown, Circle, RotateCcw, Sun, Moon, Frame } from "lucide-react";
 import {
   Select,
@@ -25,55 +36,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import shadcnData from "@/lib/theme/shadcn-data.json";
-import { useTheme } from "@/lib/theme/use-theme";
+import { useTheme, type ThemeConfig } from "@/lib/theme/use-theme";
+import { ACCENT_NAMES, BASE_NAMES } from "@/lib/theme/valid-values";
+import { saveSettingsAction } from "@/lib/settings/actions";
 import { cn } from "@/lib/utils";
-
-// Name lists + labels. These mirror the BASE_NAMES / expected accent list in
-// `scripts/fetch-shadcn-data.mjs` so the dropdown options line up with the
-// generated CSS selectors.
-const BASES = [
-  "neutral",
-  "stone",
-  "zinc",
-  "mauve",
-  "olive",
-  "mist",
-  "taupe",
-] as const;
-
-const ACCENT_NAMES = [
-  "amber",
-  "blue",
-  "cyan",
-  "emerald",
-  "fuchsia",
-  "green",
-  "indigo",
-  "lime",
-  "mauve",
-  "mist",
-  "neutral",
-  "olive",
-  "orange",
-  "pink",
-  "purple",
-  "red",
-  "rose",
-  "sky",
-  "stone",
-  "taupe",
-  "teal",
-  "violet",
-  "yellow",
-  "zinc",
-] as const;
 
 type BaseEntry = { label: string; light: Record<string, string>; dark: Record<string, string> };
 type AccentEntry = { label: string; light: Record<string, string>; dark: Record<string, string> };
 
 // shadcn-data.json has literal-union types for bases / accents. Cast to
 // Record<string, ...> for runtime lookup by name (the names we pass are
-// already validated by the BASES / ACCENT_NAMES constants).
+// validated by the server action against the same lists).
 const basesByName = shadcnData.bases as Record<string, BaseEntry>;
 const accentsByName = shadcnData.accents as Record<string, AccentEntry | null>;
 
@@ -144,7 +117,9 @@ function FieldLabel({
   );
 }
 
-export function ThemeTabContent() {
+export function ThemeTabContent({ theme }: { theme: ThemeConfig }) {
+  const router = useRouter();
+  const [, startTransition] = useTransition();
   const {
     config,
     mode,
@@ -154,14 +129,67 @@ export function ThemeTabContent() {
     setChart,
     setModePref,
     resetTheme,
-  } = useTheme();
+  } = useTheme(theme);
   // previewMode resolves the user's preference to the actual applied mode so
   // the dots in the dropdowns always show the variant that's currently live.
   const previewMode: "light" | "dark" = mode;
 
+  /**
+   * Mirror the theme into the database (the account-wide default).
+   *
+   * The local write already happened — the hook applies it to the DOM and
+   * localStorage instantly. This is the slow half: it makes the choice
+   * follow the user to their other devices.
+   *
+   * Only ever called from an EXPLICIT user action. If it ran on mount, a
+   * device with a stale local theme would overwrite the account-wide one on
+   * every visit, so "last visited" would win instead of "last changed".
+   */
+  const persist = (next: ThemeConfig) => {
+    startTransition(async () => {
+      try {
+        await saveSettingsAction({
+          themeBase: next.base,
+          themeAccent: next.accent,
+          themeChart: next.chart,
+          themeMode: next.modePref,
+        });
+        router.refresh();
+      } catch {
+        // The local theme is already applied; a failed sync is not fatal.
+      }
+    });
+  };
+
+  const handleSetBase = (base: string) => {
+    setBase(base);
+    persist({ ...config, base });
+  };
+  const handleSetAccent = (accent: string) => {
+    setAccent(accent);
+    persist({ ...config, accent });
+  };
+  const handleSetChart = (chart: string) => {
+    setChart(chart);
+    persist({ ...config, chart });
+  };
+  const handleSetModePref = (pref: ThemeConfig["modePref"]) => {
+    setModePref(pref);
+    persist({ ...config, modePref: pref });
+  };
+  const handleReset = () => {
+    resetTheme();
+    persist({
+      base: "neutral",
+      accent: "default",
+      chart: "default",
+      modePref: "system",
+    });
+  };
+
   // Build a `value → label` map for the Value render functions.
   const baseLabels: Record<string, string> = Object.fromEntries(
-    BASES.map((b) => [b, basesByName[b]?.label ?? titleCase(b)]),
+    BASE_NAMES.map((b) => [b, basesByName[b]?.label ?? titleCase(b)]),
   );
   const accentLabels: Record<string, string> = Object.fromEntries(
     ACCENT_NAMES.map((a) => [
@@ -194,7 +222,7 @@ export function ThemeTabContent() {
                 type="button"
                 role="radio"
                 aria-checked={active}
-                onClick={() => setModePref(value)}
+                onClick={() => handleSetModePref(value)}
                 className={cn(
                   "inline-flex flex-1 items-center justify-center gap-1.5 rounded-sm px-2.5 py-1.5 text-xs font-medium transition-colors",
                   active
@@ -219,7 +247,7 @@ export function ThemeTabContent() {
             <FieldLabel>Base</FieldLabel>
             <Select
               value={config.base}
-              onValueChange={(v) => v && setBase(v as typeof config.base)}
+              onValueChange={(v) => v && handleSetBase(v as typeof config.base)}
             >
               <SelectTrigger aria-label="Base color">
                 <ColorDot color={baseColor(basesByName[config.base], previewMode)} />
@@ -236,7 +264,7 @@ export function ThemeTabContent() {
                 <SelectPositioner>
                   <SelectPopup>
                     <SelectList>
-                      {BASES.map((b) => (
+                      {BASE_NAMES.map((b) => (
                         <SelectItem key={b} value={b}>
                           <ColorDot
                             color={baseColor(basesByName[b], previewMode)}
@@ -259,7 +287,7 @@ export function ThemeTabContent() {
             <FieldLabel>Theme</FieldLabel>
             <Select
               value={config.accent}
-              onValueChange={(v) => v !== null && setAccent(v)}
+              onValueChange={(v) => v !== null && handleSetAccent(v)}
             >
               <SelectTrigger aria-label="Theme color">
                 {config.accent === "default" ? (
@@ -319,7 +347,7 @@ export function ThemeTabContent() {
             <FieldLabel>Chart</FieldLabel>
             <Select
               value={config.chart}
-              onValueChange={(v) => v !== null && setChart(v)}
+              onValueChange={(v) => v !== null && handleSetChart(v)}
             >
               <SelectTrigger aria-label="Chart color">
                 {config.chart === "default" ? (
@@ -379,12 +407,13 @@ export function ThemeTabContent() {
       {/* Reset */}
       <div className="flex items-center justify-between border-t border-border pt-3">
         <p className="text-xs text-muted-foreground">
-          Saved to <code className="font-mono text-[10px]">localStorage</code>{" "}
-          under <code className="font-mono text-[10px]">life-hub:theme</code>.
+          Saved to this device in{" "}
+          <code className="font-mono text-[10px]">localStorage</code> and synced
+          to your account.
         </p>
         <button
           type="button"
-          onClick={resetTheme}
+          onClick={handleReset}
           className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           <RotateCcw className="size-3.5" />

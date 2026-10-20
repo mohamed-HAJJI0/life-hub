@@ -5,6 +5,12 @@ import { updateTag } from "next/cache";
 import { isLocale } from "@/lib/i18n";
 import { isValidTimezone } from "@/lib/time";
 import {
+  isAccentName,
+  isBaseName,
+  isChartName,
+  isModePref,
+} from "@/lib/theme/valid-values";
+import {
   ensureUser,
   upsertUserSettings,
   type UserSettings,
@@ -16,22 +22,32 @@ import {
 // is not trusted. Writes go through `lib/settings/index.ts`; this file only
 // handles the request/response boundary.
 
+/** The subset of settings a client may change. */
+export type SettingsPatch = Partial<
+  Pick<
+    UserSettings,
+    | "language"
+    | "timezone"
+    | "themeBase"
+    | "themeAccent"
+    | "themeChart"
+    | "themeMode"
+  >
+>;
+
 /**
  * Save one or more settings for the signed-in user.
  *
  * Creates the `users` + `settings` rows on first save, then expires this
  * user's cached settings so the shell re-renders with the new values.
  */
-export async function saveSettingsAction(patch: {
-  language?: string;
-  timezone?: string;
-}): Promise<UserSettings> {
+export async function saveSettingsAction(patch: SettingsPatch): Promise<UserSettings> {
   const { userId } = await auth();
   if (!userId) {
     throw new Error("Not authenticated.");
   }
 
-  const changed: Partial<UserSettings> = {};
+  const changed: SettingsPatch = {};
 
   if (patch.language !== undefined) {
     if (!isLocale(patch.language)) {
@@ -45,6 +61,37 @@ export async function saveSettingsAction(patch: {
       throw new Error(`Unsupported timezone: ${patch.timezone}`);
     }
     changed.timezone = patch.timezone;
+  }
+
+  // The theme values are validated against the live registry lists, so a
+  // hand-crafted request can't store a base/accent/chart that has no CSS
+  // behind it.
+  if (patch.themeBase !== undefined) {
+    if (!isBaseName(patch.themeBase)) {
+      throw new Error(`Unsupported theme base: ${patch.themeBase}`);
+    }
+    changed.themeBase = patch.themeBase;
+  }
+
+  if (patch.themeAccent !== undefined) {
+    if (patch.themeAccent !== "default" && !isAccentName(patch.themeAccent)) {
+      throw new Error(`Unsupported theme accent: ${patch.themeAccent}`);
+    }
+    changed.themeAccent = patch.themeAccent;
+  }
+
+  if (patch.themeChart !== undefined) {
+    if (patch.themeChart !== "default" && !isChartName(patch.themeChart)) {
+      throw new Error(`Unsupported theme chart: ${patch.themeChart}`);
+    }
+    changed.themeChart = patch.themeChart;
+  }
+
+  if (patch.themeMode !== undefined) {
+    if (!isModePref(patch.themeMode)) {
+      throw new Error(`Unsupported theme mode: ${patch.themeMode}`);
+    }
+    changed.themeMode = patch.themeMode;
   }
 
   const user = await currentUser();

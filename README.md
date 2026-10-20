@@ -95,15 +95,24 @@ accents × 24 chart palettes × light / dark / system**.
 - An inline `<head>` script applies the saved theme **before first paint**, so
   there is no flash of the wrong theme.
 
-Theme is a **device** preference and lives in `localStorage`. Language and
-timezone are **account** preferences and live in the database.
+Theme is stored in **two** places, with a fixed precedence:
+
+- `localStorage["life-hub:theme"]` — the **per-device** choice. The inline
+  script can only read this before first paint, so it wins on the device where
+  you made the change.
+- `settings.theme_*` in the database — the **account-wide** default. The server
+  renders it onto `<html>`, so a new device starts on the right theme with no
+  flash.
+
+Language and timezone live only in the database.
 
 Rebuild and verify:
 
 ```bash
 node scripts/fetch-shadcn-data.mjs
 node scripts/generate-theme-css.mjs
-node scripts/verify-theme-tokens.mjs
+node scripts/verify-theme-tokens.mjs   # registry values: PASS 174 / FAIL 0
+node scripts/test-theme-script.mjs      # no-FOUC script: ALL CHECKS PASSED
 ```
 
 ---

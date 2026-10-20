@@ -6,6 +6,8 @@ import { ShellProviders } from "@/components/shell/shell-providers";
 import { UserMenu } from "@/components/shell/user-menu";
 import { DEFAULT_LOCALE, isLocale, type Locale } from "@/lib/i18n";
 import { getUserSettings } from "@/lib/settings";
+import { isModePref } from "@/lib/theme/valid-values";
+import type { ThemeConfig } from "@/lib/theme/use-theme";
 
 // Lobby shell — composed of:
 //   - <Sidebar /> (client component) for the left nav, with collapse/expand
@@ -60,6 +62,15 @@ async function LobbyShell({ children }: { children: React.ReactNode }) {
     : DEFAULT_LOCALE;
   const timezone = settings?.timezone ?? "UTC";
 
+  // The account-wide theme. The Theme tab uses it as the fallback for
+  // devices that have no local theme of their own.
+  const theme: ThemeConfig = {
+    base: settings?.themeBase ?? "neutral",
+    accent: settings?.themeAccent ?? "default",
+    chart: settings?.themeChart ?? "default",
+    modePref: isModePref(settings?.themeMode) ? settings.themeMode : "system",
+  };
+
   return (
     <div className="flex min-h-screen">
       <Sidebar locale={locale} />
@@ -69,7 +80,7 @@ async function LobbyShell({ children }: { children: React.ReactNode }) {
         </header>
         <main className="flex-1 p-6 sm:p-10">{children}</main>
       </div>
-      <SettingsModal locale={locale} timezone={timezone} />
+      <SettingsModal locale={locale} timezone={timezone} theme={theme} />
     </div>
   );
 }
