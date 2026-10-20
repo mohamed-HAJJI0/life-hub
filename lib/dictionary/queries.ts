@@ -69,13 +69,20 @@ export const MEANINGS_TEXT = `immutable_array_to_string(meanings, ' ')`;
  * The browse list should open with the Chinese characters, not with the
  * entries that begin with a digit ("110", "119", …).
  *
- * The comparison goes through `convert_to` on purpose: a plain text
- * comparison depends on the collation, which makes it STABLE and therefore
- * impossible to index. `convert_to` + a bytea comparison are IMMUTABLE, so
- * this expression can carry an index —
- * `db/dictionary/0002_cjk_first_index.sql`.
+ * `ascii()` returns the Unicode code point of the first character, and both
+ * it and `substring()` are IMMUTABLE — which matters, because Postgres
+ * refuses to index a STABLE expression. (A plain text comparison is
+ * collation-dependent and therefore STABLE; `convert_to` is STABLE too, so
+ * neither of those can carry the index.)
+ *
+ * 19968 is U+4E00 (一) and 40960 is one past U+9FFF (鿿) — the CJK Unified
+ * Ideographs block.
+ *
+ * The expression MUST stay byte-identical to the one in
+ * `db/dictionary/0002_cjk_first_index.sql`, or Postgres silently stops using
+ * the index and the browse sorts 125k rows per page.
  */
-export const CJK_FIRST = `((convert_to(substring(simplified from 1 for 1), 'UTF8') >= convert_to('一', 'UTF8') and convert_to(substring(simplified from 1 for 1), 'UTF8') < convert_to('鿿', 'UTF8'))::int)`;
+export const CJK_FIRST = `((ascii(substring(simplified from 1 for 1)) >= 19968 and ascii(substring(simplified from 1 for 1)) < 40960)::int)`;
 
 const CJK = /[\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF]/;
 
