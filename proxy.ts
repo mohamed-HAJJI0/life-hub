@@ -24,13 +24,18 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
 // Public routes — anyone can hit these, signed in or not.
-const isPublicRoute = createRouteMatcher([
+//
+// Exported so the test suite can assert that every app route stays
+// protected (see `tests/proxy.test.ts`).
+export const PUBLIC_ROUTES = [
   "/login(.*)",
   "/signup(.*)",
   "/reset-password(.*)",
   "/verify-email(.*)",
   "/sso-callback(.*)",
-]);
+];
+
+const isPublicRoute = createRouteMatcher(PUBLIC_ROUTES);
 
 export default clerkMiddleware(async (auth, req) => {
   if (!isPublicRoute(req)) {

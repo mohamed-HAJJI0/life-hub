@@ -87,7 +87,7 @@ The Life Hub project has its own planning lives in a dedicated, **gitignored** f
 - `plans/2026-10-20_1645-module-registry-and-per-app-modules.md` — **PROPOSED (step 2, not yet approved)**: per-app `modules/` folders + per-app `_registry.ts`
 - `plans/2026-10-20_1805-drop-tags-and-db-theme.md` — **APPLIED**: drop the unused `tags` table + move the theme into `settings` (4 columns) with `localStorage` kept as the per-device override; also fixed a long-standing no-FOUC script syntax error (locked in by `scripts/test-theme-script.mjs`)
 - `plans/2026-10-20_2225-university-subapp-gallery-card.md` — **APPLIED**: new `app/university/` sub-app (own sidebar + top bar, mirrors `app/chinese-hub/`) + a "Sichuan University" gallery card linking to `/university` + en/zh i18n keys
-- `plans/2026-10-20_2313-app-test-strategy.md` — **IN PROGRESS (step 2, branch `feacher/tests`)**: Vitest suite in `tests/` + `npm run test` / `npm run verify` + GitHub Actions CI. The 3 existing node scripts stay as they are.
+- `plans/2026-10-20_2313-app-test-strategy.md` — **APPLIED (branch `feacher/tests`)**: a Vitest suite in `tests/` (125 tests) — unit tests for the pure modules, contract tests for the i18n/SQL/schema drift, component tests, and PGlite-backed DB + route tests. `npm run test` / `npm run verify` + GitHub Actions CI. The 3 existing node scripts stay as they are.
 
 ### Hard rule
 
@@ -406,8 +406,11 @@ node scripts/test-theme-script.mjs         # must report ALL CHECKS PASSED (no-F
 node scripts/test-hash-guard.mjs          # must report ALL CHECKS PASSED (Clerk tab state)
 ```
 
-`verify-theme-tokens.mjs` re-fetches the live shadcn registry, so
-`test:scripts` needs network access — `test:unit` does not.
+`verify-theme-tokens.mjs` re-fetches the live shadcn registry (and
+`raw.githubusercontent.com`), so `test:scripts` needs network access —
+`test:unit` does not. Where that host is unreachable the script fails hard,
+by design: it cannot verify without the live data. Use `npm run test:unit`
+for the hermetic suite in that case.
 
 CI runs the same steps: `.github/workflows/ci.yml`.
 
