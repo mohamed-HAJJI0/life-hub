@@ -86,6 +86,7 @@ The Life Hub project has its own planning lives in a dedicated, **gitignored** f
 - `plans/2026-10-20_1640-db-layer-and-settings.md` — **step 1 close-out**: Neon Postgres + Drizzle data layer (`lib/db/`, `db/migrations/0000_baseline.sql` + `0001_add_auth_id.sql` + `0002_add_settings.sql`), DB-backed language + timezone settings, i18n shell, server-component shell
 - `plans/2026-10-20_1645-module-registry-and-per-app-modules.md` — **PROPOSED (step 2, not yet approved)**: per-app `modules/` folders + per-app `_registry.ts`
 - `plans/2026-10-20_1805-drop-tags-and-db-theme.md` — **APPLIED**: drop the unused `tags` table + move the theme into `settings` (4 columns) with `localStorage` kept as the per-device override; also fixed a long-standing no-FOUC script syntax error (locked in by `scripts/test-theme-script.mjs`)
+- `plans/2026-10-20_2225-university-subapp-gallery-card.md` — **APPLIED**: new `app/university/` sub-app (own sidebar + top bar, mirrors `app/chinese-hub/`) + a "Sichuan University" gallery card linking to `/university` + en/zh i18n keys
 
 ### Hard rule
 

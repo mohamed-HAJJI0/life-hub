@@ -25,6 +25,9 @@
   "gallery.chinese.title": "Chinese",
   "gallery.chinese.description": "Character vocabulary, daily reviews and spaced repetition.",
   "gallery.chinese.imageAlt": "Placeholder image for the Chinese module",
+  "gallery.university.title": "Sichuan University",
+  "gallery.university.description": "Campus resources, schedule and study tools.",
+  "gallery.university.imageAlt": "Placeholder image for the Sichuan University module",
   "gallery.comingSoon.title": "Coming soon",
   "gallery.comingSoon.description": "More life areas are on the way.",
   "gallery.comingSoon.imageAlt": "Placeholder image for a life area that has not been created yet",
@@ -44,6 +47,13 @@
   "chinese.dictionary.empty": "No matches.",
   "chinese.dictionary.loading": "Loading…",
   "chinese.dictionary.error": "Could not load the dictionary.",
+
+  "university.title": "Sichuan University",
+  "university.subtitle": "Your campus life, organised.",
+  "university.nav.primary": "University navigation",
+  "university.nav.overview": "Overview",
+  "university.empty.title": "Nothing here yet",
+  "university.empty.description": "Add your first campus item to get started.",
 
   "settings.title": "Settings",
   "settings.tab.theme": "Theme",

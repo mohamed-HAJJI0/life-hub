@@ -25,6 +25,9 @@
   "gallery.chinese.title": "中文",
   "gallery.chinese.description": "汉字词库、每日复习和间隔重复。",
   "gallery.chinese.imageAlt": "中文模块的占位图",
+  "gallery.university.title": "四川大学",
+  "gallery.university.description": "校园资源、日程与学习工具。",
+  "gallery.university.imageAlt": "四川大学模块的占位图",
   "gallery.comingSoon.title": "即将推出",
   "gallery.comingSoon.description": "更多生活领域正在路上。",
   "gallery.comingSoon.imageAlt": "尚未创建的生活领域的占位图",
@@ -44,6 +47,13 @@
   "chinese.dictionary.empty": "没有找到匹配项。",
   "chinese.dictionary.loading": "加载中…",
   "chinese.dictionary.error": "无法加载词典。",
+
+  "university.title": "四川大学",
+  "university.subtitle": "整理你的校园生活。",
+  "university.nav.primary": "校园导航",
+  "university.nav.overview": "概览",
+  "university.empty.title": "这里还是空的",
+  "university.empty.description": "添加第一个校园项目，开始使用。",
 
   "settings.title": "设置",
   "settings.tab.theme": "主题",

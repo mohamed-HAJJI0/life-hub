@@ -44,6 +44,13 @@ const GALLERY_ENTRIES: GalleryEntry[] = [
     imageAltKey: "gallery.chinese.imageAlt",
   },
   {
+    href: "/university",
+    image: { src: "/gallery/placeholder.png", width: 1200, height: 800 },
+    titleKey: "gallery.university.title",
+    descriptionKey: "gallery.university.description",
+    imageAltKey: "gallery.university.imageAlt",
+  },
+  {
     href: null,
     image: { src: "/gallery/placeholder.png", width: 1200, height: 800 },
     titleKey: "gallery.comingSoon.title",
