@@ -113,6 +113,7 @@ node scripts/fetch-shadcn-data.mjs
 node scripts/generate-theme-css.mjs
 node scripts/verify-theme-tokens.mjs   # registry values: PASS 174 / FAIL 0
 node scripts/test-theme-script.mjs      # no-FOUC script: ALL CHECKS PASSED
+node scripts/test-hash-guard.mjs        # Clerk tab state: ALL CHECKS PASSED
 ```
 
 ---

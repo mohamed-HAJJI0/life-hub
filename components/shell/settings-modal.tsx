@@ -10,9 +10,14 @@
 //      UI feel like one surface, not a Clerk modal inside a Clerk modal.
 //
 // `routing="hash"` on <UserProfile /> keeps tab switches in the URL hash
-// (e.g. /#theme) instead of changing the path. That way we don't need a
+// (e.g. /#/theme) instead of changing the path. That way we don't need a
 // catch-all route and tab state survives the modal closing (more on that
 // in the sidebar's mount logic).
+//
+// Hash caveat: Next.js's HistoryUpdater calls history.replaceState() after
+// every render with a canonical URL that never contains the fragment, which
+// silently strips Clerk's router state and bounces the profile back to its
+// first page. `useHashGuard` keeps the fragment alive for same-path updates.
 //
 // Reopening-stale-tab note: Clerk's hash-based <UserProfile> writes the
 // current tab to `window.location.hash`. If the user closes the modal on
@@ -30,6 +35,7 @@ import { ThemeTabContent } from "@/components/shell/settings-tabs/theme-tab-cont
 import { LanguageTabContent } from "@/components/shell/settings-tabs/language-tab-content";
 import { TimezoneTabContent } from "@/components/shell/settings-tabs/timezone-tab-content";
 import { useSettings } from "@/components/shell/settings-store";
+import { useHashGuard } from "@/components/shell/use-hash-guard";
 import { getDictionary, t, type Locale } from "@/lib/i18n";
 import type { ThemeConfig } from "@/lib/theme/use-theme";
 
@@ -47,6 +53,11 @@ export function SettingsModal({
   // same modal.
   const { settingsOpen, setSettingsOpen } = useSettings();
   const dict = getDictionary(locale);
+
+  // Next.js strips the URL fragment on every router update, which would
+  // bounce Clerk's hash router back to its first page. Keep it alive while
+  // the modal is open.
+  useHashGuard(settingsOpen);
 
   return (
     <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
