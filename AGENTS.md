@@ -40,6 +40,30 @@ Reversible safety net: git has an `init` commit; never commit or discard anythin
 - No surprise edits: nothing outside the approved plan.
 - Flag risk and destructive actions in bold.
 
+### Planning rules (when the user asks for a plan)
+
+**Format**
+- Start with a 2-3 line summary: what we're building and the main approach.
+- Then give a numbered list of steps. Max 10 steps. If more are needed, group them into phases.
+- Each step is one line: what to do, plus a short reason if it isn't obvious.
+- No long paragraphs. Short sentences, plain words.
+- No filler, no intros like "Great question", no repeating the request back.
+
+**Content**
+- Plan only: ideas, architecture, flow, file structure. No code unless explicitly asked.
+- Name the exact files, tables, or pages affected in each step.
+- Put steps in the order they should actually be done.
+- Mark anything risky or uncertain with "Risk:" and give a fallback.
+- List open questions at the end (max 3). Don't ask them before planning unless the plan is impossible without answers.
+
+**Scope**
+- Do the simplest thing that works. Don't add features the user didn't ask for.
+- Don't redesign existing parts unless it's required.
+- If the task is big, give the plan for phase 1 only, then wait.
+
+**Before finishing**
+- Re-read the plan: could someone understand it in 30 seconds? If not, shorten it.
+
 ## 4. Project plans (check before working)
 
 The Life Hub project has its own planning lives in a dedicated, **gitignored** folder. Plans live there, not in chat, so they don't get lost between sessions.
