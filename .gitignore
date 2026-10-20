@@ -32,6 +32,8 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# ...but the template is tracked, so a fresh clone knows which keys exist.
+!.env.example
 
 # vercel
 .vercel
