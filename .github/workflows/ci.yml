@@ -1,0 +1,52 @@
+name: CI
+
+# The project's regression net, run on every push and pull request.
+#
+# `npm run test` is split into two halves on purpose:
+#   - `test:unit`   — the Vitest suite. Hermetic: no network, no database.
+#   - `test:scripts` — the three hand-written node scripts. One of them
+#                      re-fetches the live shadcn registry to prove our
+#                      cached theme data is still current, so it needs
+#                      network access.
+#
+# `npm run build` type-checks the app and renders every route, so it needs
+# the same environment the app needs at runtime — the secrets below.
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    env:
+      # Add these as repository secrets (Settings → Secrets and variables →
+      # Actions). The build renders the shell, which reads the session and
+      # the user's settings.
+      CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit and contract tests
+        run: npm run test:unit
+
+      - name: Theme + hash-guard regression scripts
+        run: npm run test:scripts
+
+      - name: Build (also type-checks)
+        run: npm run build

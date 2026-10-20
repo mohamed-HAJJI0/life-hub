@@ -87,6 +87,7 @@ The Life Hub project has its own planning lives in a dedicated, **gitignored** f
 - `plans/2026-10-20_1645-module-registry-and-per-app-modules.md` — **PROPOSED (step 2, not yet approved)**: per-app `modules/` folders + per-app `_registry.ts`
 - `plans/2026-10-20_1805-drop-tags-and-db-theme.md` — **APPLIED**: drop the unused `tags` table + move the theme into `settings` (4 columns) with `localStorage` kept as the per-device override; also fixed a long-standing no-FOUC script syntax error (locked in by `scripts/test-theme-script.mjs`)
 - `plans/2026-10-20_2225-university-subapp-gallery-card.md` — **APPLIED**: new `app/university/` sub-app (own sidebar + top bar, mirrors `app/chinese-hub/`) + a "Sichuan University" gallery card linking to `/university` + en/zh i18n keys
+- `plans/2026-10-20_2313-app-test-strategy.md` — **IN PROGRESS (step 2, branch `feacher/tests`)**: Vitest suite in `tests/` + `npm run test` / `npm run verify` + GitHub Actions CI. The 3 existing node scripts stay as they are.
 
 ### Hard rule
 
@@ -382,10 +383,31 @@ Run these before declaring a change done — they are the project's regression n
 
 ```bash
 npm run lint                              # must exit 0
+npm run test                              # the whole net: test:scripts + test:unit
 npm run build                             # must pass (also type-checks)
-node scripts/verify-theme-tokens.mjs      # must report PASS: 174 / FAIL: 0
-node scripts/test-theme-script.mjs         # must report ALL CHECKS PASSED (no-FOUC script)
-node scripts/test-hash-guard.mjs          # must report ALL CHECKS PASSED (Clerk tab state)
 npx drizzle-kit generate --name <name>    # after a schema change
 npx drizzle-kit migrate                   # to apply it to Neon
 ```
+
+`npm run test` runs two halves:
+
+```bash
+npm run test:unit                         # Vitest — the suite in tests/ (hermetic)
+npm run test:scripts                      # the three hand-written node scripts
+npm run test:watch                        # Vitest in watch mode
+npm run test:coverage                     # Vitest with a coverage report
+```
+
+`test:unit` needs no network and no database. `test:scripts` runs:
+
+```bash
+node scripts/verify-theme-tokens.mjs      # must report PASS: 174 / FAIL: 0
+node scripts/test-theme-script.mjs         # must report ALL CHECKS PASSED (no-FOUC script)
+node scripts/test-hash-guard.mjs          # must report ALL CHECKS PASSED (Clerk tab state)
+```
+
+`verify-theme-tokens.mjs` re-fetches the live shadcn registry, so
+`test:scripts` needs network access — `test:unit` does not.
+
+CI runs the same steps: `.github/workflows/ci.yml`.
+
