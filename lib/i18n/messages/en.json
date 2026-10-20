@@ -1,0 +1,76 @@
+{
+  "app.name": "Life Hub",
+  "app.lobby": "Lobby",
+
+  "nav.home": "Home",
+  "nav.today": "Today",
+  "nav.gallery": "Gallery",
+  "nav.back": "Back",
+  "nav.settings": "Settings",
+  "nav.collapse": "Collapse",
+  "nav.expand": "Expand",
+  "nav.primary": "Primary navigation",
+
+  "home.title": "Welcome",
+  "home.subtitle": "Your life dashboard.",
+  "home.empty.title": "Nothing here yet",
+  "home.empty.description": "Modules will appear here as they are added.",
+
+  "today.title": "Today",
+  "today.subtitle": "What needs attention across all your life areas.",
+  "today.empty": "No items due.",
+
+  "gallery.title": "Gallery",
+  "gallery.subtitle": "Photos and images from your life areas.",
+  "gallery.chinese.title": "Chinese",
+  "gallery.chinese.description": "Character vocabulary, daily reviews and spaced repetition.",
+  "gallery.chinese.imageAlt": "Placeholder image for the Chinese module",
+  "gallery.university.title": "Sichuan University",
+  "gallery.university.description": "Campus resources, schedule and study tools.",
+  "gallery.university.imageAlt": "Placeholder image for the Sichuan University module",
+  "gallery.comingSoon.title": "Coming soon",
+  "gallery.comingSoon.description": "More life areas are on the way.",
+  "gallery.comingSoon.imageAlt": "Placeholder image for a life area that has not been created yet",
+
+  "chinese.title": "Chinese",
+  "chinese.subtitle": "Your Chinese character vocabulary.",
+  "chinese.nav.primary": "Chinese navigation",
+  "chinese.nav.overview": "Overview",
+  "chinese.nav.dictionary": "Dictionary",
+  "chinese.empty.title": "Nothing here yet",
+  "chinese.empty.description": "Add your first character to start the daily review.",
+
+  "chinese.dictionary.title": "Dictionary",
+  "chinese.dictionary.subtitle": "125,271 entries — search by character, pinyin or meaning.",
+  "chinese.dictionary.search.label": "Search the dictionary",
+  "chinese.dictionary.search.placeholder": "Character, pinyin or meaning…",
+  "chinese.dictionary.empty": "No matches.",
+  "chinese.dictionary.loading": "Loading…",
+  "chinese.dictionary.error": "Could not load the dictionary.",
+
+  "university.title": "Sichuan University",
+  "university.subtitle": "Your campus life, organised.",
+  "university.nav.primary": "University navigation",
+  "university.nav.overview": "Overview",
+  "university.empty.title": "Nothing here yet",
+  "university.empty.description": "Add your first campus item to get started.",
+
+  "settings.title": "Settings",
+  "settings.tab.theme": "Theme",
+  "settings.tab.language": "Language",
+  "settings.tab.timezone": "Timezone",
+
+  "settings.language.description": "Language used for the Life Hub interface.",
+  "settings.timezone.description": "Used for daily streaks and what counts as \"due today\".",
+  "settings.timezone.autoDetect": "Auto-detect",
+  "settings.timezone.current": "Current timezone",
+
+  "userMenu.open": "Open user menu",
+  "userMenu.manageAccount": "Manage account",
+  "userMenu.signOut": "Sign out",
+
+  "common.save": "Save",
+  "common.saving": "Saving…",
+  "common.saved": "Saved",
+  "common.cancel": "Cancel"
+}

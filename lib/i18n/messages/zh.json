@@ -1,0 +1,76 @@
+{
+  "app.name": "Life Hub",
+  "app.lobby": "大厅",
+
+  "nav.home": "首页",
+  "nav.today": "今日",
+  "nav.gallery": "画廊",
+  "nav.back": "返回",
+  "nav.settings": "设置",
+  "nav.collapse": "收起",
+  "nav.expand": "展开",
+  "nav.primary": "主导航",
+
+  "home.title": "欢迎",
+  "home.subtitle": "你的生活仪表盘。",
+  "home.empty.title": "这里还是空的",
+  "home.empty.description": "模块添加后会显示在这里。",
+
+  "today.title": "今日",
+  "today.subtitle": "所有生活领域中今天需要处理的事项。",
+  "today.empty": "今天没有待办事项。",
+
+  "gallery.title": "画廊",
+  "gallery.subtitle": "来自各个生活领域的照片和图片。",
+  "gallery.chinese.title": "中文",
+  "gallery.chinese.description": "汉字词库、每日复习和间隔重复。",
+  "gallery.chinese.imageAlt": "中文模块的占位图",
+  "gallery.university.title": "四川大学",
+  "gallery.university.description": "校园资源、日程与学习工具。",
+  "gallery.university.imageAlt": "四川大学模块的占位图",
+  "gallery.comingSoon.title": "即将推出",
+  "gallery.comingSoon.description": "更多生活领域正在路上。",
+  "gallery.comingSoon.imageAlt": "尚未创建的生活领域的占位图",
+
+  "chinese.title": "中文",
+  "chinese.subtitle": "你的汉字词库。",
+  "chinese.nav.primary": "中文导航",
+  "chinese.nav.overview": "概览",
+  "chinese.nav.dictionary": "词典",
+  "chinese.empty.title": "这里还是空的",
+  "chinese.empty.description": "添加第一个汉字，开始每日复习。",
+
+  "chinese.dictionary.title": "词典",
+  "chinese.dictionary.subtitle": "共 125,271 条 — 可用汉字、拼音或释义搜索。",
+  "chinese.dictionary.search.label": "搜索词典",
+  "chinese.dictionary.search.placeholder": "汉字、拼音或释义…",
+  "chinese.dictionary.empty": "没有找到匹配项。",
+  "chinese.dictionary.loading": "加载中…",
+  "chinese.dictionary.error": "无法加载词典。",
+
+  "university.title": "四川大学",
+  "university.subtitle": "整理你的校园生活。",
+  "university.nav.primary": "校园导航",
+  "university.nav.overview": "概览",
+  "university.empty.title": "这里还是空的",
+  "university.empty.description": "添加第一个校园项目，开始使用。",
+
+  "settings.title": "设置",
+  "settings.tab.theme": "主题",
+  "settings.tab.language": "语言",
+  "settings.tab.timezone": "时区",
+
+  "settings.language.description": "Life Hub 界面使用的语言。",
+  "settings.timezone.description": "用于计算每日连续天数以及“今天到期”的判断。",
+  "settings.timezone.autoDetect": "自动检测",
+  "settings.timezone.current": "当前时区",
+
+  "userMenu.open": "打开用户菜单",
+  "userMenu.manageAccount": "管理账户",
+  "userMenu.signOut": "退出登录",
+
+  "common.save": "保存",
+  "common.saving": "保存中…",
+  "common.saved": "已保存",
+  "common.cancel": "取消"
+}

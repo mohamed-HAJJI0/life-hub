@@ -32,6 +32,8 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# ...but the template is tracked, so a fresh clone knows which keys exist.
+!.env.example
 
 # vercel
 .vercel
@@ -43,3 +45,5 @@ next-env.d.ts
 # project plans (local-only working docs, date-stamped)
 # see AGENTS.md §4 — "Project plans"
 /plans/
+
+.clerk/
