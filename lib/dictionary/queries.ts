@@ -1,3 +1,4 @@
+import { cacheLife, cacheTag } from "next/cache";
 import { getDictionaryDb } from "./client";
 
 // The Chinese dictionary — 125,271 entries in the `public.dictionary` table of
@@ -170,6 +171,25 @@ function toEntry(row: RawRow): DictionaryEntry {
     pinyinNumeric: row.pinyin_numeric,
     meanings: row.meanings ?? [],
   };
+}
+
+/**
+ * The first page of the browse list, as rendered on the server.
+ *
+ * `"use cache"` — the dictionary is reference data that rarely changes, and
+ * with `cacheComponents` enabled Next.js refuses to read uncached data
+ * during a render that is not behind a Suspense boundary. Caching it keeps
+ * the navigation instant and avoids a fallback flash; the tag lets it be
+ * invalidated if the dictionary is ever re-imported.
+ *
+ * The API route calls `searchDictionary` directly, uncached — that is a
+ * request handler, not a render.
+ */
+export async function getDictionaryFirstPage(): Promise<DictionaryPage> {
+  "use cache";
+  cacheTag("dictionary");
+  cacheLife("hours");
+  return searchDictionary({ query: "", offset: 0 });
 }
 
 /**

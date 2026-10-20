@@ -1,7 +1,7 @@
 import { DictionaryBrowser } from "./dictionary-browser";
 import { getCurrentUserSettings } from "@/lib/settings";
 import { getDictionary, resolveLocale, t } from "@/lib/i18n";
-import { searchDictionary } from "@/lib/dictionary/queries";
+import { getDictionaryFirstPage } from "@/lib/dictionary/queries";
 
 // The Chinese dictionary.
 //
@@ -18,8 +18,10 @@ export default async function DictionaryPage() {
 
   // The first page is fetched here, on the server, so the list is already
   // there when the page arrives — no spinner on first paint, and no fetch
-  // from an effect on the client.
-  const firstPage = await searchDictionary({ query: "", offset: 0 });
+  // from an effect on the client. It is a cached read: the dictionary is
+  // reference data, and Next.js (with cacheComponents on) refuses to read
+  // uncached data during a render.
+  const firstPage = await getDictionaryFirstPage();
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
