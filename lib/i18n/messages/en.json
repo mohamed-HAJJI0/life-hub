@@ -21,9 +21,18 @@
 
   "gallery.title": "Gallery",
   "gallery.subtitle": "Photos and images from your life areas.",
-  "gallery.card.title": "Sample image",
-  "gallery.card.description": "A placeholder card showing how gallery items will look.",
-  "gallery.card.imageAlt": "Placeholder image of a soft gradient",
+  "gallery.chinese.title": "Chinese",
+  "gallery.chinese.description": "Character vocabulary, daily reviews and spaced repetition.",
+  "gallery.chinese.imageAlt": "Placeholder image for the Chinese module",
+  "gallery.comingSoon.title": "Coming soon",
+  "gallery.comingSoon.description": "More life areas are on the way.",
+  "gallery.comingSoon.imageAlt": "Placeholder image for a life area that has not been created yet",
+
+  "chinese.title": "Chinese",
+  "chinese.subtitle": "Your Chinese character vocabulary.",
+  "chinese.back": "Back to Life Hub",
+  "chinese.empty.title": "Nothing here yet",
+  "chinese.empty.description": "Add your first character to start the daily review.",
 
   "settings.title": "Settings",
   "settings.tab.theme": "Theme",

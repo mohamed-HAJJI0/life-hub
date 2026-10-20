@@ -21,9 +21,18 @@
 
   "gallery.title": "画廊",
   "gallery.subtitle": "来自各个生活领域的照片和图片。",
-  "gallery.card.title": "示例图片",
-  "gallery.card.description": "占位卡片，展示画廊项目的样子。",
-  "gallery.card.imageAlt": "柔和渐变的占位图",
+  "gallery.chinese.title": "中文",
+  "gallery.chinese.description": "汉字词库、每日复习和间隔重复。",
+  "gallery.chinese.imageAlt": "中文模块的占位图",
+  "gallery.comingSoon.title": "即将推出",
+  "gallery.comingSoon.description": "更多生活领域正在路上。",
+  "gallery.comingSoon.imageAlt": "尚未创建的生活领域的占位图",
+
+  "chinese.title": "中文",
+  "chinese.subtitle": "你的汉字词库。",
+  "chinese.back": "返回 Life Hub",
+  "chinese.empty.title": "这里还是空的",
+  "chinese.empty.description": "添加第一个汉字，开始每日复习。",
 
   "settings.title": "设置",
   "settings.tab.theme": "主题",
