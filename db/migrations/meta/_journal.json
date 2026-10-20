@@ -5,22 +5,22 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1792486030571,
-      "tag": "0000_init",
+      "when": 1792493934685,
+      "tag": "0000_baseline",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1792490842084,
-      "tag": "0001_drop_tags",
+      "when": 1792494104356,
+      "tag": "0001_add_auth_id",
       "breakpoints": true
     },
     {
       "idx": 2,
       "version": "7",
-      "when": 1792490891943,
-      "tag": "0002_add_theme_to_settings",
+      "when": 1792494123656,
+      "tag": "0002_add_settings",
       "breakpoints": true
     }
   ]

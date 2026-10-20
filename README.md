@@ -67,7 +67,16 @@ npx drizzle-kit studio                   # browse the data
 ```
 
 Shared tables live in `lib/db/schema/shared.ts`; per-module tables get their
-own file and are prefixed by module name (`chinese_characters`, …).
+own file and are prefixed by module name (`chinese_characters`, …). Every
+table name the app owns is listed in **`lib/db/tables.ts`** — change it there
+and the schema, the queries and the next migration all follow.
+
+> **The database is shared with another app.** `public` also holds `courses`,
+> `posts`, `post-content`, `submissions` and `accepted-ids`. Life Hub does not
+> model them — that is deliberate, and it is what stops `drizzle-kit` from
+> ever proposing to drop them. The `users` table belongs to that app too; we
+> extend it with an `auth_id` column (the Clerk user id) and use that as our
+> key.
 
 ---
 
