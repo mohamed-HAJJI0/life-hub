@@ -93,8 +93,12 @@ export function DictionaryBrowser({
 
   // The sentinel sits 80 rows into the page that is currently loaded, so
   // the next fetch starts when the user reaches item 80 of that page.
+  //
+  // `ceil` picks the page the list currently ends in: with 100 rows loaded
+  // that is the first page, so the sentinel goes after row 80. With 200
+  // rows it is the second page, so it goes after row 180.
   const sentinelIndex =
-    Math.floor(items.length / PAGE_SIZE) * PAGE_SIZE + (TRIGGER_AFTER - 1);
+    (Math.ceil(items.length / PAGE_SIZE) - 1) * PAGE_SIZE + (TRIGGER_AFTER - 1);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {

@@ -62,6 +62,20 @@ export const NORMALISED_PINYIN_NUMERIC = `regexp_replace(lower(pinyin_numeric), 
  */
 export const MEANINGS_TEXT = `immutable_array_to_string(meanings, ' ')`;
 
+/**
+ * 1 when the entry starts with a Chinese character, 0 otherwise.
+ *
+ * The browse list should open with the Chinese characters, not with the
+ * entries that begin with a digit ("110", "119", …).
+ *
+ * The comparison goes through `convert_to` on purpose: a plain text
+ * comparison depends on the collation, which makes it STABLE and therefore
+ * impossible to index. `convert_to` + a bytea comparison are IMMUTABLE, so
+ * this expression can carry an index —
+ * `db/dictionary/0002_cjk_first_index.sql`.
+ */
+export const CJK_FIRST = `((convert_to(substring(simplified from 1 for 1), 'UTF8') >= convert_to('一', 'UTF8') and convert_to(substring(simplified from 1 for 1), 'UTF8') < convert_to('鿿', 'UTF8'))::int)`;
+
 const CJK = /[\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF]/;
 
 /** Is the query Chinese (or Japanese kanji)? Those search the character columns. */
@@ -196,7 +210,10 @@ async function browseRows(
 ): Promise<RawRow[]> {
   return runQuery(
     db,
-    `select ${SELECT_COLUMNS} from public.dictionary order by id limit $1 offset $2`,
+    `select ${SELECT_COLUMNS}
+       from public.dictionary
+      order by ${CJK_FIRST} desc, id
+      limit $1 offset $2`,
     [limit, offset],
   );
 }
@@ -221,6 +238,9 @@ async function searchRows(
   }
 
   // Latin input: toneless pinyin on both pinyin columns, plus the meaning.
+  //
+  // The ranking puts the plain single-syllable words first — searching
+  // "shi" lists 是 / 十 / 时 before the combined words like 十二 or 时候.
   const normalised = normaliseQuery(query);
 
   if (!normalised) {
@@ -240,11 +260,26 @@ async function searchRows(
     db,
     `select ${SELECT_COLUMNS}
        from public.dictionary
-      where ${NORMALISED_PINYIN} like $1
-         or ${NORMALISED_PINYIN_NUMERIC} like $1
-         or ${MEANINGS_TEXT} ilike $2
-      order by id
-      limit $3 offset $4`,
-    [`%${normalised}%`, `%${query}%`, limit, offset],
+      where ${NORMALISED_PINYIN} like $3
+         or ${NORMALISED_PINYIN_NUMERIC} like $3
+         or ${MEANINGS_TEXT} ilike $4
+      order by
+        case
+          when ${NORMALISED_PINYIN} = $1 then 0
+          when ${NORMALISED_PINYIN} like $2 then 1
+          when ${NORMALISED_PINYIN} like $3 then 2
+          when ${NORMALISED_PINYIN_NUMERIC} like $3 then 3
+          else 4
+        end,
+        id
+      limit $5 offset $6`,
+    [
+      normalised,
+      `${normalised}%`,
+      `%${normalised}%`,
+      `%${query}%`,
+      limit,
+      offset,
+    ],
   );
 }
