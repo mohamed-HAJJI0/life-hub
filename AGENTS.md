@@ -49,6 +49,9 @@ The Life Hub project has its own planning lives in a dedicated, **gitignored** f
 - `plans/2026-10-16_1838-clerk-auth-and-lobby-shell.md` — Clerk auth (`@clerk/nextjs`, accountless dev, `proxy.ts` gate), `app/(lobby)/` shell + `app/(auth)/` pages, shadcn theme for Clerk components
 - `plans/2026-10-16_1915-collapsible-sidebar-and-unified-settings.md` — collapsible sidebar (`components/shell/sidebar.tsx`, localStorage `life-hub:sidebar-collapsed`) + unified `/settings` (Clerk `<UserProfile />` reached from sidebar and from `UserButton`'s "Manage account" via `userProfileUrl="/settings"`) — **superseded by `2026-10-16_1935-floating-userprofile-modal.md`** (no page, modal only)
 - `plans/2026-10-16_1935-floating-userprofile-modal.md` — Settings button calls `useClerk().openUserProfile()` to open Clerk's `<UserProfile />` as a floating modal; no `/settings` page
+- `plans/2026-10-16_2155-shadcn-theme-editor.md` — shadcn-style theme editor: 7 bases × 24 accents × 24 charts × light/dark/system, sourced from the live registry (`lib/theme/shadcn-data.json` + auto-generated `app/theme-tokens.css`), verified by `scripts/verify-theme-tokens.mjs` (174 PASS / 0 FAIL)
+- `plans/2026-10-20_1640-db-layer-and-settings.md` — **step 1 close-out**: Neon Postgres + Drizzle data layer (`lib/db/`, `db/migrations/0000_init.sql`), DB-backed language + timezone settings, i18n shell, server-component shell
+- `plans/2026-10-20_1645-module-registry-and-per-app-modules.md` — **PROPOSED (step 2, not yet approved)**: per-app `modules/` folders + per-app `_registry.ts`
 
 ### Hard rule
 
@@ -68,12 +71,17 @@ life-hub/
 │   │   ├── login/[[...sign-in]]/page.tsx        # /login — Clerk <SignIn />
 │   │   ├── signup/[[...sign-up]]/page.tsx       # /signup — Clerk <SignUp />
 │   │   ├── reset-password/[[...reset-password]]/page.tsx  # /reset-password
-│   │   └── verify-email/[[...verify]]/page.tsx  # /verify-email
+│   │   ├── verify-email/[[...verify]]/page.tsx  # /verify-email
+│   │   └── modules/              # THIS app's modules (+ _registry.ts) — per-app, never shared
 │   ├── (lobby)/                  # route group (no /lobby URL segment) — main app, protected
-│   │   ├── layout.tsx            # sidebar + topbar (the "shell")
+│   │   ├── layout.tsx            # sidebar + topbar (the "shell") — server component
 │   │   ├── page.tsx              # / (home dashboard)
-│   │   └── today/page.tsx        # /today — aggregate "what's due today"
+│   │   ├── today/page.tsx        # /today — aggregate "what's due today"
+│   │   └── modules/              # THIS app's modules (+ _registry.ts) — per-app, never shared
+│   │       ├── _registry.ts      # the lobby's module registry
+│   │       └── <module>/         # this module's pages + components
 │   ├── chinese-hub/              # (future) real folder, URL = /chinese-hub — separate sub-app
+│   │   └── modules/              # THIS app's modules (+ _registry.ts) — per-app, never shared
 │   ├── api/                      # route handlers (if not using server actions)
 │   ├── globals.css
 │   └── layout.tsx                # root: fonts + no-FOUC + <ClerkProvider>
@@ -109,9 +117,10 @@ life-hub/
 │   ├── utils.ts                  # shadcn `cn()` re-export (from the `cn` package)
 │   ├── export/                   # JSON export/import
 │   ├── time/                     # timezone-aware date utils
-│   └── types/                    # cross-cutting TS types
+│   ├── i18n/                     # translations (messages/<locale>.json) + `t()` helper
+│   └── types/                    # cross-cutting TS types (ModuleDef, …)
 │
-├── modules/                      # per-module domain logic (UI lives in app/)
+├── modules/                      # per-module domain logic (UI lives in the owning app)
 │   └── chinese/
 │       ├── service.ts            # addCharacter, getDue, logMiss
 │       └── queries.ts
@@ -122,6 +131,7 @@ life-hub/
 │
 ├── plans/                        # gitignored local working plans
 ├── components.json               # shadcn config — `style`, `baseColor`, `aliases`, `iconLibrary`. Source of truth; committed.
+├── drizzle.config.ts             # Drizzle Kit config — schema → lib/db/schema, out → db/migrations
 ├── AGENTS.md
 └── package.json
 ```
@@ -132,6 +142,8 @@ life-hub/
 |---|---|
 | A new page or route | `app/(lobby)/<name>/page.tsx` (for shell-wrapped pages) or `app/(auth)/<name>/page.tsx` (for public auth pages) |
 | A new life area / module (sub-app) | `app/<name>-hub/page.tsx` (real folder at root URL, e.g. `app/chinese-hub/` → `/chinese-hub`) + `modules/<name>/` for logic. Not wrapped by the lobby shell — each sub-app is independent. |
+| A module **of an app X** | `app/X/modules/<name>/page.tsx` (UI) + root `modules/<name>/service.ts` (domain logic). Every app owns its own `modules/` folder — modules are never shared between apps. See `plans/2026-10-20_1645-module-registry-and-per-app-modules.md`. |
+| The module registry **of an app X** | `app/X/modules/_registry.ts` — one per app (`(lobby)`, `(auth)`, each future sub-app). Not a single global registry. |
 | A reusable UI primitive | `components/ui/` (only if it's a shadcn primitive; otherwise `components/<domain>/`) |
 | A new shadcn primitive | `npx shadcn@latest add <name>` — never hand-roll. Don't bypass `components.json`. |
 | Shell chrome (sidebar, nav) | `app/(lobby)/layout.tsx` — the shell itself lives here, not in `components/`. Sub-components (Sidebar, future Topbar/Rightbar) live in `components/shell/`. Keep the shell a server component; extract only the parts that need client state (Sidebar is the canonical example — it owns the `collapsed` localStorage state). |
@@ -144,12 +156,15 @@ life-hub/
 | The user-profile / settings modal | **Our shadcn `<Dialog>`** wraps Clerk's `<UserProfile routing="hash">` (`components/shell/settings-modal.tsx`). Sidebar Settings button toggles local `settingsOpen` state. Custom tabs (e.g. Theme) declared as `<UserProfile.Page>` children with their own content files under `components/shell/settings-tabs/`. `<UserButton />` "Manage account" still works (Clerk renders its own user-profile modal by default — to use the same one, mount `<SettingsModal />` next to the `<UserButton />` and route through it). |
 | Database tables shared by all modules | `lib/db/schema/shared.ts` (e.g. `users`, `settings`, `tags`) |
 | Database tables for one module | `lib/db/schema/<module>.ts` (e.g. `chinese_characters`, `chinese_reviews`) — **table names are prefixed by module** |
-| A SQL migration | `db/migrations/NNNN_<name>.sql` |
+| A SQL migration | `db/migrations/NNNN_<name>.sql` — generated by `npx drizzle-kit generate --name <name>` (do not hand-write) |
+| The database client | `lib/db/client.ts` — **server-only**, never import it from a client component |
+| A server action | `lib/<domain>/actions.ts` with a `"use server"` directive — domain logic stays in `lib/`, pages stay thin |
+| A translated string | `lib/i18n/messages/<locale>.json` — read via `t()` from `lib/i18n`. Add a language by adding one JSON file with the same keys. |
 | Domain logic for a module (add/get/log) | `modules/<module>/service.ts` |
 | Anything that knows "what's due today" | `lib/scheduler/` — modules plug in via a `dueSource` function |
 | Activity / streak logic | `lib/activity/` |
 | Auth session / user identity | **Clerk** (`@clerk/nextjs`). Do not hand-roll `lib/auth/`. The `userId` is available server-side via `await auth()` from `@clerk/nextjs/server`. |
-| User settings read/write | `lib/settings/` (DB-backed; session is Clerk's) |
+| User settings read/write | `lib/settings/` (DB-backed; session is Clerk's) — `index.ts` for reads/writes, `actions.ts` for `"use server"` mutations. Language + timezone are DB-backed; **theme is localStorage-only** (see §5 Database). |
 | Theme tokens / runtime theme system | `lib/theme/` + `app/theme-tokens.css` + `scripts/fetch-shadcn-data.mjs` + `scripts/generate-theme-css.mjs` + `scripts/verify-theme-tokens.mjs` — see `plans/2026-10-16_2155-shadcn-theme-editor.md` for the data shape and verification protocol. The Theme tab in `components/shell/settings-tabs/theme-tab-content.tsx` is the only entry point. |
 | Clerk env vars (`CLERK_*`, `NEXT_PUBLIC_CLERK_*`) | `.env.local` (gitignored via `.env*`) |
 | A new project plan | `plans/YYYY-MM-DD_HHMM-<name>.md` + update §4 list |
@@ -175,20 +190,55 @@ We use [Clerk](https://clerk.com) for authentication — no hand-rolled `lib/aut
 
 ### Module registry (the central pattern)
 
-Every life area registers itself in `app/(app)/modules/_registry.ts`. Adding a new module = one entry. Shape:
+**Modules are per-app.** Every app — route group *or* root sub-app — owns its
+own `modules/` folder and its own registry inside it. There is no global
+registry.
+
+```
+app/(lobby)/modules/_registry.ts       # the lobby's modules
+app/(auth)/modules/_registry.ts        # the auth app's modules
+app/<name>-hub/modules/_registry.ts    # each future sub-app's modules
+```
+
+An app's registry powers **that app's** sidebar nav, dashboard widgets,
+`/today` page, and scheduler. A module registered in one app never appears in
+another app's nav. Do not bypass a registry with hardcoded module lists.
+
+Adding a module to an app = one entry. Shape:
 
 ```ts
 export const chinese = {
-  id: "chinese",                   // unique, lowercase, used in routes + table prefix
+  id: "chinese",                   // unique within the app, lowercase, used in routes + table prefix
   name: "Chinese",
   icon: "Languages",               // lucide icon name
   route: "/modules/chinese",
-  dashboardWidget: ChineseWidget,  // component shown on home dashboard
+  dashboardWidget: ChineseWidget,  // component shown on the app's home dashboard
   dueSource: chineseDueSource,     // plugs into generic scheduler (lib/scheduler)
 } satisfies ModuleDef;
 ```
 
-The registry powers: sidebar nav, dashboard widgets, the `/today` page, and the scheduler. Do not bypass it with hardcoded module lists.
+`ModuleDef` is a cross-cutting type → `lib/types/`. The registry itself is
+implemented in step 2 — see `plans/2026-10-20_1645-module-registry-and-per-app-modules.md`.
+
+### Database (Neon Postgres + Drizzle)
+
+- **Neon Postgres** is the database. Connection string lives in `.env.local` as
+  `DATABASE_URL` (gitignored via `.env*`). Use the **pooled** endpoint for the app.
+- **Drizzle ORM** for the typed schema and queries. `drizzle-orm` +
+  `@neondatabase/serverless` (HTTP driver — no persistent sockets, correct for
+  serverless) at runtime; `drizzle-kit` at dev time.
+- `drizzle.config.ts` points `schema` at `lib/db/schema/index.ts` and `out` at
+  `db/migrations`. It loads `.env.local` via `dotenv` — **drizzle-kit does not
+  read `.env.local` on its own** (Next.js does).
+- **Migrations are generated, never hand-written:**
+  `npx drizzle-kit generate --name <name>` writes
+  `db/migrations/NNNN_<name>.sql` + the `meta/` journal. Apply with
+  `npx drizzle-kit migrate`.
+- The **Clerk user id is the `users.id` primary key** — the user id is the spine
+  of everything. `users` rows are upserted from the Clerk session.
+- **Theme stays in localStorage** (not in the DB): the no-FOUC `<head>` script
+  must read it synchronously before paint, which a DB round-trip cannot do. The
+  DB-backed settings are language + timezone.
 
 ### Naming conventions
 
