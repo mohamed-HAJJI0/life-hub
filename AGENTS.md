@@ -180,7 +180,7 @@ life-hub/
 | A translated string | `lib/i18n/messages/<locale>.json` — read via `t()` from `lib/i18n`. Add a language by adding one JSON file with the same keys. |
 | Domain logic for a module (add/get/log) | `modules/<module>/service.ts` |
 | Anything that knows "what's due today" | `lib/scheduler/` — modules plug in via a `dueSource` function |
-| Day boundaries, "today", timezone math | `lib/time/` — `getTodayInTz`, `startOfDayInTz`, `formatDateInTz`. Never compare raw `Date` objects to decide what "today" means; the day boundary is the user's timezone. |
+| Day boundaries, "today", timezone math | `lib/time/` — `getTodayInTz`, `startOfDayInTz`, `formatDateInTz`. Never compare raw `Date` objects to decide what "today" means; the day boundary is the user's timezone. **Never call `new Date()` in a Server Component** — Next refuses to bake an unstable value into the prerendered shell. Read "now" through a client component that calls `use(io())` (see `app/(lobby)/today/local-date.tsx`). |
 | Activity / streak logic | `lib/activity/` |
 | Auth session / user identity | **Clerk** (`@clerk/nextjs`). Do not hand-roll `lib/auth/`. The `userId` is available server-side via `await auth()` from `@clerk/nextjs/server`. |
 | User settings read/write | `lib/settings/` (DB-backed; session is Clerk's) — `index.ts` for reads/writes, `actions.ts` for `"use server"` mutations. Language, timezone and the theme are DB-backed; the theme ALSO lives in localStorage as the per-device override (see §5 Database). |

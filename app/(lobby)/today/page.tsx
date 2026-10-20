@@ -7,6 +7,7 @@
 // (`lib/time/`) — the same day boundary the scheduler will use once it
 // lands. Change the timezone in Settings and this updates.
 
+import { Suspense } from "react";
 import { CalendarDays } from "lucide-react";
 import {
   Card,
@@ -15,14 +16,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { LocalDate } from "./local-date";
 import { getCurrentUserSettings } from "@/lib/settings";
 import { getDictionary, resolveLocale, t } from "@/lib/i18n";
-import { getTodayInTz } from "@/lib/time";
 
 export default async function TodayPage() {
   const settings = await getCurrentUserSettings();
   const dict = getDictionary(resolveLocale(settings.language));
-  const { isoDate } = getTodayInTz(settings.timezone);
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -34,7 +34,12 @@ export default async function TodayPage() {
           {t(dict, "today.subtitle")}
         </p>
         <p className="mt-1 text-xs text-muted-foreground">
-          {isoDate} · {settings.timezone}
+          {/* The date is request-bound, so it streams in behind its own
+              boundary rather than being baked into a prerendered shell. */}
+          <Suspense fallback={<span>—</span>}>
+            <LocalDate timezone={settings.timezone} />
+          </Suspense>{" "}
+          · {settings.timezone}
         </p>
       </div>
       <Card>
