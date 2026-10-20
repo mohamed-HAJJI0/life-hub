@@ -1,36 +1,137 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Life Hub
 
-## Getting Started
+A personal life dashboard — one home for every life area (Chinese, tasks,
+habits, health…), with a shared "what's due today" view across all of them.
 
-First, run the development server:
+Built as a set of independent **apps** (Next.js route groups / root folders),
+each owning its own modules, sharing a common shell, database and scheduler.
+
+> **Working rules live in [`AGENTS.md`](./AGENTS.md).** Read it before making
+> any change — it defines the file layout, the plan-then-apply loop, and the
+> commit cadence. Project plans live in `plans/` (gitignored).
+
+---
+
+## Stack
+
+| Layer | Choice |
+|---|---|
+| Framework | Next.js 16 (App Router, Turbopack, Cache Components) |
+| UI | [shadcn/ui](https://ui.shadcn.com) — `base-nova` style, `taupe` base color, Base UI primitives, lucide icons |
+| Auth | [Clerk](https://clerk.com) — `proxy.ts` middleware gate, no hand-rolled session code |
+| Database | [Neon](https://neon.tech) Postgres via [Drizzle ORM](https://orm.drizzle.team) |
+| Language | TypeScript (strict), Tailwind CSS 4 |
+
+---
+
+## Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev          # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Environment variables
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+`.env.local` (gitignored). Next.js loads it automatically; **drizzle-kit does
+not** — `drizzle.config.ts` loads it explicitly via `dotenv`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variable | Required | Purpose |
+|---|---|---|
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | yes | Clerk client key |
+| `CLERK_SECRET_KEY` | yes | Clerk server key |
+| `DATABASE_URL` | yes | Neon **pooled** connection string, e.g. `postgresql://user:pass@host/db?sslmode=require` |
 
-## Learn More
+Clerk dev keys are written to `.env.local` by:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npx -y clerk@latest init --no-skills   # accountless dev mode — no account needed
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+To claim the app for production later:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npx -y clerk@latest auth login
+npx -y clerk@latest env pull --instance prod
+```
 
-## Deploy on Vercel
+### Database
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Migrations are **generated**, never hand-written, and tracked in git under
+`db/migrations/`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npx drizzle-kit generate --name <name>   # writes db/migrations/NNNN_<name>.sql
+npx drizzle-kit migrate                  # applies pending migrations
+npx drizzle-kit studio                   # browse the data
+```
+
+Shared tables live in `lib/db/schema/shared.ts`; per-module tables get their
+own file and are prefixed by module name (`chinese_characters`, …).
+
+---
+
+## Scripts
+
+| Command | What it does |
+|---|---|
+| `npm run dev` | Dev server |
+| `npm run build` | Production build (also type-checks) |
+| `npm run start` | Serve the production build |
+| `npm run lint` | ESLint |
+| `node scripts/verify-theme-tokens.mjs` | Re-fetches the live shadcn registry and verifies every theme token (expect `PASS: 174 / FAIL: 0`) |
+
+---
+
+## Theme system
+
+`lib/theme/` implements a shadcn-style runtime theme editor: **7 bases × 24
+accents × 24 chart palettes × light / dark / system**.
+
+- Colors come from the live shadcn registry, pinned into
+  `lib/theme/shadcn-data.json` by `scripts/fetch-shadcn-data.mjs`.
+- `app/theme-tokens.css` is generated from that JSON by
+  `scripts/generate-theme-css.mjs` — never hand-edit it.
+- An inline `<head>` script applies the saved theme **before first paint**, so
+  there is no flash of the wrong theme.
+
+Theme is a **device** preference and lives in `localStorage`. Language and
+timezone are **account** preferences and live in the database.
+
+Rebuild and verify:
+
+```bash
+node scripts/fetch-shadcn-data.mjs
+node scripts/generate-theme-css.mjs
+node scripts/verify-theme-tokens.mjs
+```
+
+---
+
+## Where things go
+
+`AGENTS.md` §5 is the canonical map. The short version:
+
+| Thing | Location |
+|---|---|
+| Routes | `app/` — thin, server components by default |
+| A module of app X | `app/X/modules/<name>/page.tsx` (UI) + `modules/<name>/service.ts` (logic) |
+| A module registry | `app/X/modules/_registry.ts` — one per app, never global |
+| Shared UI | `components/ui/` (shadcn) and `components/shell/` (shell chrome) |
+| Shared infra | `lib/` — `db/`, `settings/`, `time/`, `i18n/`, `theme/`, `scheduler/`, `activity/` |
+| Migrations | `db/migrations/` |
+
+---
+
+## Roadmap
+
+Build order (from `plans/2026-10-16_1608-project-plan-and-structure.md`):
+
+1. ✅ Auth + shell + settings
+2. ⬜ Module registry + empty dashboard
+3. ⬜ Chinese module v1
+4. ⬜ Generic scheduler
+5. ⬜ Today view (aggregate)
+6. ⬜ Second module (tasks or habits) — proves the base is reusable
+
+PWA setup and JSON export are hygiene, not polish — both ship before step 6.

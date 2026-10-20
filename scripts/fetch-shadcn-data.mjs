@@ -164,7 +164,6 @@ function parseCssVarsObject(str) {
   // on data fetched from a pinned GitHub source, so the eval surface is
   // small and known.
   const body = str.replace(/^\s*\{/, "").replace(/\}\s*$/, "");
-  // eslint-disable-next-line no-new-func
   const fn = new Function(`"use strict"; return ({${body}});`);
   return fn();
 }

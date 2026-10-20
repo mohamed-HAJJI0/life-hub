@@ -48,10 +48,6 @@ function section(name) {
   console.log(`\n── ${name} ──`);
 }
 
-function titleCase(s) {
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
-
 function pickAccentKeys(tokens) {
   const out = {};
   for (const k of ACCENT_KEYS) {
@@ -93,7 +89,6 @@ function findBlock(chunk, key) {
 
 function parseCssVarsObject(str) {
   const body = str.replace(/^\s*\{/, "").replace(/\}\s*$/, "");
-  // eslint-disable-next-line no-new-func
   return new Function(`"use strict"; return ({${body}});`)();
 }
 

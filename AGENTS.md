@@ -162,6 +162,7 @@ life-hub/
 | A translated string | `lib/i18n/messages/<locale>.json` — read via `t()` from `lib/i18n`. Add a language by adding one JSON file with the same keys. |
 | Domain logic for a module (add/get/log) | `modules/<module>/service.ts` |
 | Anything that knows "what's due today" | `lib/scheduler/` — modules plug in via a `dueSource` function |
+| Day boundaries, "today", timezone math | `lib/time/` — `getTodayInTz`, `startOfDayInTz`, `formatDateInTz`. Never compare raw `Date` objects to decide what "today" means; the day boundary is the user's timezone. |
 | Activity / streak logic | `lib/activity/` |
 | Auth session / user identity | **Clerk** (`@clerk/nextjs`). Do not hand-roll `lib/auth/`. The `userId` is available server-side via `await auth()` from `@clerk/nextjs/server`. |
 | User settings read/write | `lib/settings/` (DB-backed; session is Clerk's) — `index.ts` for reads/writes, `actions.ts` for `"use server"` mutations. Language + timezone are DB-backed; **theme is localStorage-only** (see §5 Database). |

@@ -1,8 +1,6 @@
 // Home dashboard — first page after sign-in. Today it's a skeleton; the
 // real dashboard (today's reviews, streak, modules) lands in a later
-// milestone. The chart card is here as a temporary visual anchor for the
-// theme editor so users (and reviewers) can see the live chart-1..5 colors
-// while picking a theme.
+// milestone (step 2 — see plans/2026-10-20_1645-module-registry-and-per-app-modules.md).
 //
 // Per `AGENTS.md` §5: home dashboard lives at `app/(lobby)/page.tsx`
 // (route group, no URL segment).
@@ -45,39 +43,25 @@ export default async function Home() {
               {t(dict, "home.empty.description")}
             </CardDescription>
           </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              {t(dict, "home.subtitle")}
+            </p>
+          </CardContent>
         </Card>
 
-        {/* TEMPORARY: visual verification of the theme editor. The chart
-            bars use bg-chart-1..5 to confirm the chart color picker
-            changes them live. Remove this card (or move it behind a
-            dev-only route) once the theme editor is verified. */}
-        <ChartPreviewCard />
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">{t(dict, "today.title")}</CardTitle>
+            <CardDescription>{t(dict, "today.subtitle")}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              {t(dict, "today.empty")}
+            </p>
+          </CardContent>
+        </Card>
       </section>
     </div>
-  );
-}
-
-function ChartPreviewCard() {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Chart preview</CardTitle>
-        <CardDescription>
-          <span className="text-xs">
-            TEMPORARY — these bars use{" "}
-            <code className="font-mono">bg-chart-1..5</code>.
-          </span>
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="flex h-32 items-end gap-2">
-          <div className="h-1/4 flex-1 rounded-t bg-chart-1" />
-          <div className="h-2/4 flex-1 rounded-t bg-chart-2" />
-          <div className="h-3/4 flex-1 rounded-t bg-chart-3" />
-          <div className="h-2/3 flex-1 rounded-t bg-chart-4" />
-          <div className="h-1/2 flex-1 rounded-t bg-chart-5" />
-        </div>
-      </CardContent>
-    </Card>
   );
 }
