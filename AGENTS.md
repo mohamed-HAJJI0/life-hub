@@ -2,6 +2,13 @@
 
 > Mandatory for every session that works in this repo. Read and follow before making any change.
 
+> ### ⛔ NEVER PUSH
+>
+> Do not run `git push` — not at the end of a step, not for a new branch, not
+> "just to keep the remote in sync". **Local commits only.** The user owns
+> pushing. If a change seems to need a push, say so in your summary and let
+> the user decide.
+
 ## 1. Plan first — always (core rule)
 
 Never change a file without an approved plan. For ANY change — code, features, refactors, configs, dependencies, renames, deletions, git actions — follow this loop:
@@ -22,7 +29,8 @@ Reversible safety net: git has an `init` commit; never commit or discard anythin
 
 ## 2. After an approved plan is applied
 
-- **Commit on the current feature branch.** The user works in a "commit after each apply" cadence — every approved plan lands as its own commit (or a small number of focused commits) on the active feature branch before any unrelated work. Push when it makes sense (new branch, end of a step, etc.); local commit is the minimum.
+- **Commit on the current feature branch.** The user works in a "commit after each apply" cadence — every approved plan lands as its own commit (or a small number of focused commits) on the active feature branch before any unrelated work.
+- **Never push.** See the ⛔ NEVER PUSH callout at the top of this file. A local commit is the end of the job; the user pushes. If the plan itself says to push, the plan is wrong — flag it instead of following it.
 - Verify the result: run build / lint / tests when the change warrants it.
 - Summarize what actually changed vs. what was planned (including anything skipped).
 
@@ -90,23 +98,30 @@ life-hub/
 │
 ├── components/                   # shared UI, NO module-specific logic
 │   ├── ui/                       # shadcn primitives (Button, Card, Input…) — `npx shadcn@latest add <name>` to grow
-│   ├── shell/                    # Sidebar, Topbar, NavLink — used by the lobby layout
-│   │   └── sidebar.tsx           # collapsible sidebar (icon-only / full) — client component
+│   ├── shell/                    # shell chrome used by the lobby layout
+│   │   ├── sidebar.tsx           # collapsible sidebar (icon-only / full) — client component
+│   │   ├── user-menu.tsx         # avatar + account menu (replaces Clerk <UserButton />)
+│   │   ├── settings-modal.tsx    # our <Dialog> wrapping Clerk's <UserProfile> + custom tabs
+│   │   ├── settings-store.tsx    # "use client" context: the modal's open state
+│   │   ├── shell-providers.tsx   # client boundary that carries that context
+│   │   └── settings-tabs/        # one file per custom tab (theme, language, timezone)
 │   ├── widgets/                  # dashboard widget shells
 │
 ├── lib/                          # infra shared across modules
 │   ├── db/                       # db client + per-module schema files
-│   │   ├── client.ts
+│   │   ├── client.ts             # Neon HTTP driver + Drizzle instance — SERVER-ONLY
 │   │   └── schema/
 │   │       ├── shared.ts         # users, settings, tags
-│   │       ├── chinese.ts        # characters, reviews, sentences
-│   │       └── index.ts
-│   ├── scheduler/                # generic spaced-repetition engine
+│   │       ├── chinese.ts        # (planned) characters, reviews, sentences
+│   │       └── index.ts          # re-exports — the single schema entry point
+│   ├── scheduler/                # (planned, step 4) generic spaced-repetition engine
 │   │   ├── due.ts                # dueItems(module, user, date)
 │   │   └── review.ts             # recordReview(itemId, grade)
-│   ├── activity/                 # activity log + streaks
-│   ├── notifications/            # reminders stub
+│   ├── activity/                 # (planned) activity log + streaks
+│   ├── notifications/            # (planned) reminders stub
 │   ├── settings/                 # user settings read/write (DB-backed; Clerk owns the session)
+│   │   ├── index.ts              # getUserSettings (cached per user) + upsertUserSettings
+│   │   └── actions.ts            # "use server" mutations — authenticate + validate
 │   ├── theme/                    # shadcn-style runtime theme system (v3)
 │   │   ├── constants.ts          # STORAGE_KEY + defaults (no React, safe to import from the no-FOUC script)
 │   │   ├── use-theme.ts          # client hook { config, mode, modePref, setBase, setAccent, setChart, setModePref, resetTheme }
@@ -115,23 +130,24 @@ life-hub/
 │   │   ├── shadcn-data.json      # AUTO-GENERATED: 7 bases × 24 accents × 2 modes, from the live registry
 │   │   └── themes.ts             # (deleted; replaced by the JSON + scripts)
 │   ├── utils.ts                  # shadcn `cn()` re-export (from the `cn` package)
-│   ├── export/                   # JSON export/import
-│   ├── time/                     # timezone-aware date utils
+│   ├── export/                   # (planned) JSON export/import
+│   ├── time/                     # timezone-aware date utils — day boundaries live here
 │   ├── i18n/                     # translations (messages/<locale>.json) + `t()` helper
-│   └── types/                    # cross-cutting TS types (ModuleDef, …)
+│   └── types/                    # (planned) cross-cutting TS types (ModuleDef, …)
 │
 ├── modules/                      # per-module domain logic (UI lives in the owning app)
-│   └── chinese/
+│   └── chinese/                  # (planned, step 3)
 │       ├── service.ts            # addCharacter, getDue, logMiss
 │       └── queries.ts
 │
-├── db/migrations/                # SQL migrations, tracked in git
+├── db/migrations/                # SQL migrations, tracked in git — 0000_init.sql is applied
 │
 ├── public/                       # static + PWA assets (manifest.json, sw.js)
 │
 ├── plans/                        # gitignored local working plans
 ├── components.json               # shadcn config — `style`, `baseColor`, `aliases`, `iconLibrary`. Source of truth; committed.
 ├── drizzle.config.ts             # Drizzle Kit config — schema → lib/db/schema, out → db/migrations
+├── .env.example                  # tracked template for every required env var (no secrets)
 ├── AGENTS.md
 └── package.json
 ```
@@ -167,7 +183,7 @@ life-hub/
 | Auth session / user identity | **Clerk** (`@clerk/nextjs`). Do not hand-roll `lib/auth/`. The `userId` is available server-side via `await auth()` from `@clerk/nextjs/server`. |
 | User settings read/write | `lib/settings/` (DB-backed; session is Clerk's) — `index.ts` for reads/writes, `actions.ts` for `"use server"` mutations. Language + timezone are DB-backed; **theme is localStorage-only** (see §5 Database). |
 | Theme tokens / runtime theme system | `lib/theme/` + `app/theme-tokens.css` + `scripts/fetch-shadcn-data.mjs` + `scripts/generate-theme-css.mjs` + `scripts/verify-theme-tokens.mjs` — see `plans/2026-10-16_2155-shadcn-theme-editor.md` for the data shape and verification protocol. The Theme tab in `components/shell/settings-tabs/theme-tab-content.tsx` is the only entry point. |
-| Clerk env vars (`CLERK_*`, `NEXT_PUBLIC_CLERK_*`) | `.env.local` (gitignored via `.env*`) |
+| Clerk env vars (`CLERK_*`, `NEXT_PUBLIC_CLERK_*`) | `.env.local` (gitignored via `.env*`) — the tracked template is `.env.example`; keep the two in sync when you add a variable |
 | A new project plan | `plans/YYYY-MM-DD_HHMM-<name>.md` + update §4 list |
 
 ### shadcn/ui
@@ -235,6 +251,12 @@ implemented in step 2 — see `plans/2026-10-20_1645-module-registry-and-per-app
   `npx drizzle-kit generate --name <name>` writes
   `db/migrations/NNNN_<name>.sql` + the `meta/` journal. Apply with
   `npx drizzle-kit migrate`.
+- `drizzle-kit migrate` records what it applied in the
+  `drizzle.__drizzle_migrations` table (`hash` + `created_at`). It decides
+  what to run by comparing **timestamps, not hashes** — so editing an
+  already-applied migration does *not* re-run it. To change the schema,
+  generate a new migration. Re-running `migrate` is safe; it skips what is
+  already applied.
 - The **Clerk user id is the `users.id` primary key** — the user id is the spine
   of everything. `users` rows are upserted from the Clerk session.
 - **Theme stays in localStorage** (not in the DB): the no-FOUC `<head>` script
@@ -249,3 +271,44 @@ implemented in step 2 — see `plans/2026-10-20_1645-module-registry-and-per-app
 - **TS types:** PascalCase, no `I` prefix (`ModuleDef`, not `IModuleDef`)
 - **Migrations:** `NNNN_<name>.sql` — drizzle-kit numbers from `0000_`; sequential, never edited after merge. Each file has a sibling snapshot in `db/migrations/meta/` — commit both.
 - **Plans:** `plans/YYYY-MM-DD_HHMM-<name>.md`
+
+## 6. Where the project stands
+
+Build order lives in `plans/2026-10-16_1608-project-plan-and-structure.md`.
+
+| # | Step | Status |
+|---|---|---|
+| 1 | Auth + shell + settings | ✅ **done** — Clerk auth, collapsible sidebar, theme editor (localStorage), language + timezone (Neon/Drizzle), server-component shell, i18n `en`/`zh` |
+| 2 | Module registry + empty dashboard | ⬜ next — per-app `modules/` + `_registry.ts`; the sidebar's nav list is still hardcoded |
+| 3 | Chinese module v1 | ⬜ — add a character, review daily, track misses |
+| 4 | Extract generic scheduler | ⬜ — `lib/scheduler/` |
+| 5 | Today view (aggregate) | ⬜ — `/today` is a placeholder; it already shows the user's local date |
+| 6 | Second module (tasks or habits) | ⬜ — proves the base is reusable |
+
+**Still owed before step 6:** PWA setup (`public/` is empty — no `manifest.json`,
+no `sw.js`) and JSON export/import (`lib/export/` does not exist).
+
+### Environment
+
+`.env.local` holds the real values (gitignored); `.env.example` is the tracked
+template and must list every required key. Required today:
+
+| Variable | Notes |
+|---|---|
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk client key |
+| `CLERK_SECRET_KEY` | Clerk server key — never commit |
+| `NEXT_PUBLIC_CLERK_SIGN_IN_URL` / `..._SIGN_UP_URL` | `/login` / `/signup` |
+| `NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL` / `..._SIGN_UP_FALLBACK_REDIRECT_URL` | `/` |
+| `DATABASE_URL` | Neon **pooled** connection string |
+
+### Verification commands
+
+Run these before declaring a change done — they are the project's regression net:
+
+```bash
+npm run lint                              # must exit 0
+npm run build                             # must pass (also type-checks)
+node scripts/verify-theme-tokens.mjs      # must report PASS: 174 / FAIL: 0
+npx drizzle-kit generate --name <name>    # after a schema change
+npx drizzle-kit migrate                   # to apply it to Neon
+```
