@@ -5,6 +5,7 @@
   "nav.home": "Home",
   "nav.today": "Today",
   "nav.gallery": "Gallery",
+  "nav.back": "Back",
   "nav.settings": "Settings",
   "nav.collapse": "Collapse",
   "nav.expand": "Expand",
@@ -30,7 +31,8 @@
 
   "chinese.title": "Chinese",
   "chinese.subtitle": "Your Chinese character vocabulary.",
-  "chinese.back": "Back to Life Hub",
+  "chinese.nav.primary": "Chinese navigation",
+  "chinese.nav.overview": "Overview",
   "chinese.empty.title": "Nothing here yet",
   "chinese.empty.description": "Add your first character to start the daily review.",
 

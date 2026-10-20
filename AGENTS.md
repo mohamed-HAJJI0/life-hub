@@ -90,7 +90,11 @@ life-hub/
 │   │   └── modules/              # THIS app's modules (+ _registry.ts) — per-app, never shared
 │   │       ├── _registry.ts      # the lobby's module registry
 │   │       └── <module>/         # this module's pages + components
-│   ├── chinese-hub/              # (future) real folder, URL = /chinese-hub — separate sub-app
+│   ├── chinese-hub/              # real folder, URL = /chinese-hub — separate sub-app
+│   │   ├── layout.tsx            # this app's OWN shell: sidebar + top bar + settings modal
+│   │   ├── sidebar.tsx           # its own sidebar — client component (back button in the brand slot)
+│   │   ├── top-bar.tsx           # its own top app bar
+│   │   ├── page.tsx              # the sub-app's landing page
 │   │   └── modules/              # THIS app's modules (+ _registry.ts) — per-app, never shared
 │   ├── api/                      # route handlers (if not using server actions)
 │   ├── globals.css
@@ -102,6 +106,7 @@ life-hub/
 │   ├── ui/                       # shadcn primitives (Button, Card, Input…) — `npx shadcn@latest add <name>` to grow
 │   ├── shell/                    # shell chrome used by the lobby layout
 │   │   ├── sidebar.tsx           # collapsible sidebar (icon-only / full) — client component
+│   │   ├── use-collapsed.ts      # "use client" hook: the shared collapsed-sidebar state
 │   │   ├── user-menu.tsx         # avatar + account menu (replaces Clerk <UserButton />)
 │   │   ├── settings-modal.tsx    # our <Dialog> wrapping Clerk's <UserProfile> + custom tabs
 │   │   ├── settings-store.tsx    # "use client" context: the modal's open state
@@ -161,12 +166,12 @@ life-hub/
 | If you're adding… | It goes in… |
 |---|---|
 | A new page or route | `app/(lobby)/<name>/page.tsx` (for shell-wrapped pages) or `app/(auth)/<name>/page.tsx` (for public auth pages) |
-| A new life area / module (sub-app) | `app/<name>-hub/page.tsx` (real folder at root URL, e.g. `app/chinese-hub/` → `/chinese-hub`) + `modules/<name>/` for logic. Not wrapped by the lobby shell — each sub-app is independent. |
+| A new life area / module (sub-app) | `app/<name>-hub/` — a real folder at a root URL (e.g. `app/chinese-hub/` → `/chinese-hub`) + root `modules/<name>/` for logic. **Every app owns its own shell**: the lobby's lives in `app/(lobby)/layout.tsx` + `components/shell/`, a sub-app's lives in its own folder (`app/chinese-hub/layout.tsx` + `sidebar.tsx` + `top-bar.tsx`). The apps are independent in their chrome, not in their settings. |
 | A module **of an app X** | `app/X/modules/<name>/page.tsx` (UI) + root `modules/<name>/service.ts` (domain logic). Every app owns its own `modules/` folder — modules are never shared between apps. See `plans/2026-10-20_1645-module-registry-and-per-app-modules.md`. |
 | The module registry **of an app X** | `app/X/modules/_registry.ts` — one per app (`(lobby)`, `(auth)`, each future sub-app). Not a single global registry. |
 | A reusable UI primitive | `components/ui/` (only if it's a shadcn primitive; otherwise `components/<domain>/`) |
 | A new shadcn primitive | `npx shadcn@latest add <name>` — never hand-roll. Don't bypass `components.json`. |
-| Shell chrome (sidebar, nav) | `app/(lobby)/layout.tsx` — the shell itself lives here, not in `components/`. Sub-components (Sidebar, future Topbar/Rightbar) live in `components/shell/`. Keep the shell a server component; extract only the parts that need client state (Sidebar is the canonical example — it owns the `collapsed` localStorage state). |
+| Shell chrome (sidebar, top bar, nav) | **Each app owns its own shell, in its own folder.** The lobby's: `app/(lobby)/layout.tsx` (the shell itself) + `components/shell/` (its sub-components). A sub-app's: `app/<name>-hub/layout.tsx` + `app/<name>-hub/sidebar.tsx` + `app/<name>-hub/top-bar.tsx`. They share only the *settings* (the same `<SettingsModal />`) and the collapsed-sidebar state (`components/shell/use-collapsed.ts`). Keep the shell a server component; extract only the parts that need client state (Sidebar is the canonical example). |
 | A theme-aware control (toggle, picker) | `components/<name>.tsx` (root of `components/`) — domain component, not a primitive |
 | A theme color / value / palette | `lib/theme/shadcn-data.json` — single source of truth, **built from the live shadcn registry** by `scripts/fetch-shadcn-data.mjs`. CSS lives in `app/theme-tokens.css` (also auto-generated, 110 selectors). The no-FOUC `<head>` script and the React hook both read this layout. Don't hand-edit colors — see `plans/2026-10-16_2155-shadcn-theme-editor.md`. |
 | The no-FOUC inline script | `lib/theme/theme-script.ts` — invoked from `app/layout.tsx` `<head>` |

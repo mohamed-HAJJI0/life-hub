@@ -4,6 +4,10 @@
 // (per AGENTS.md §5: shell sub-components live here, the layout itself
 // stays in `app/(lobby)/layout.tsx`).
 //
+// This is the LOBBY's own sidebar. Every app has its own — the Chinese Hub
+// has its own in `app/chinese-hub/sidebar.tsx`. They share the collapsed
+// state (via `useCollapsedSidebar`) and the settings modal, nothing else.
+//
 // Layout (top → bottom):
 //   - Logo block ("LH" badge + "Life Hub" / "Lobby" label; label hidden when collapsed)
 //   - Top nav: Home, Today, Gallery
@@ -22,10 +26,10 @@
 // module registry — see plans/2026-10-20_1645-module-registry-and-per-app-modules.md.
 //
 // State:
-//   - `collapsed` lives in localStorage (`life-hub:sidebar-collapsed`) so it
-//     survives page navigations and reloads. Read through
-//     `useSyncExternalStore`, which is SSR-safe (server snapshot = expanded)
-//     and doesn't flash on hydration the way a useEffect + setState would.
+//   - `collapsed` comes from `useCollapsedSidebar` (`components/shell/
+//     use-collapsed.ts`) — localStorage (`life-hub:sidebar-collapsed`), so it
+//     survives page navigations and reloads, and is shared with the other
+//     apps' sidebars.
 //   - Width: `w-64` expanded, `w-16` collapsed, with a 200ms `transition-[width]`
 //     so the collapse is smooth instead of jumpy.
 //
@@ -35,7 +39,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCallback, useSyncExternalStore } from "react";
 import {
   CalendarDays,
   ChevronsLeft,
@@ -48,6 +51,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { useSettings } from "@/components/shell/settings-store";
+import { useCollapsedSidebar } from "@/components/shell/use-collapsed";
 import { getDictionary, t, type Locale } from "@/lib/i18n";
 
 type NavItem = {
@@ -56,39 +60,8 @@ type NavItem = {
   icon: LucideIcon;
 };
 
-const STORAGE_KEY = "life-hub:sidebar-collapsed";
-const CHANGE_EVENT = "life-hub:sidebar-collapsed-changed";
-
-function subscribeCollapsed(onStoreChange: () => void) {
-  // `storage` fires in other tabs; CHANGE_EVENT fires in this one.
-  window.addEventListener("storage", onStoreChange);
-  window.addEventListener(CHANGE_EVENT, onStoreChange);
-  return () => {
-    window.removeEventListener("storage", onStoreChange);
-    window.removeEventListener(CHANGE_EVENT, onStoreChange);
-  };
-}
-
-// Returns a boolean primitive, so the snapshot is stable between calls.
-function getCollapsedSnapshot(): boolean {
-  try {
-    return window.localStorage.getItem(STORAGE_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
-
-// Server render: always expanded. The real value arrives after hydration.
-function getCollapsedServerSnapshot(): boolean {
-  return false;
-}
-
 export function Sidebar({ locale }: { locale: Locale }) {
-  const collapsed = useSyncExternalStore(
-    subscribeCollapsed,
-    getCollapsedSnapshot,
-    getCollapsedServerSnapshot,
-  );
+  const { collapsed, toggle } = useCollapsedSidebar();
   const { openSettings } = useSettings();
   const pathname = usePathname();
   const dict = getDictionary(locale);
@@ -98,16 +71,6 @@ export function Sidebar({ locale }: { locale: Locale }) {
     { href: "/today", label: t(dict, "nav.today"), icon: CalendarDays },
     { href: "/gallery", label: t(dict, "nav.gallery"), icon: LayoutGrid },
   ];
-
-  const toggle = useCallback(() => {
-    const next = getCollapsedSnapshot() ? "0" : "1";
-    try {
-      window.localStorage.setItem(STORAGE_KEY, next);
-    } catch {
-      // best-effort persistence
-    }
-    window.dispatchEvent(new Event(CHANGE_EVENT));
-  }, []);
 
   const linkBase = cn(
     "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",

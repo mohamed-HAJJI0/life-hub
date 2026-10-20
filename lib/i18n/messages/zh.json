@@ -5,6 +5,7 @@
   "nav.home": "首页",
   "nav.today": "今日",
   "nav.gallery": "画廊",
+  "nav.back": "返回",
   "nav.settings": "设置",
   "nav.collapse": "收起",
   "nav.expand": "展开",
@@ -30,7 +31,8 @@
 
   "chinese.title": "中文",
   "chinese.subtitle": "你的汉字词库。",
-  "chinese.back": "返回 Life Hub",
+  "chinese.nav.primary": "中文导航",
+  "chinese.nav.overview": "概览",
   "chinese.empty.title": "这里还是空的",
   "chinese.empty.description": "添加第一个汉字，开始每日复习。",
 
