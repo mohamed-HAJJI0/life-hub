@@ -1,4 +1,11 @@
-"use client";
+import { Suspense } from "react";
+import { auth } from "@clerk/nextjs/server";
+import { Sidebar } from "@/components/shell/sidebar";
+import { SettingsModal } from "@/components/shell/settings-modal";
+import { ShellProviders } from "@/components/shell/shell-providers";
+import { UserMenu } from "@/components/shell/user-menu";
+import { DEFAULT_LOCALE, isLocale, type Locale } from "@/lib/i18n";
+import { getUserSettings } from "@/lib/settings";
 
 // Lobby shell — composed of:
 //   - <Sidebar /> (client component) for the left nav, with collapse/expand
@@ -18,17 +25,14 @@
 // Protection: handled in `proxy.ts` via `auth.protect()` on the lobby
 // route matcher. Unauthenticated users get redirected to /login.
 //
+// This is a SERVER component (per `AGENTS.md` §5) so it can read the user's
+// language + timezone from the database and hand them to the client
+// components as props. Only the parts that need client state (Sidebar,
+// UserMenu, SettingsModal) are client components.
+//
 // Per `AGENTS.md` §5:
 //   - The shell itself lives here; sub-components (Sidebar, UserMenu,
 //     SettingsModal) live in `components/shell/`.
-
-import { Sidebar } from "@/components/shell/sidebar";
-import { SettingsModal } from "@/components/shell/settings-modal";
-import {
-  SettingsProvider,
-  useSettings,
-} from "@/components/shell/settings-store";
-import { UserMenu } from "@/components/shell/user-menu";
 
 export default function LobbyLayout({
   children,
@@ -36,34 +40,49 @@ export default function LobbyLayout({
   children: React.ReactNode;
 }) {
   return (
-    <SettingsProvider>
-      <LobbyShell>{children}</LobbyShell>
-    </SettingsProvider>
+    <ShellProviders>
+      {/* The shell reads the session + settings, both of which are dynamic.
+          Suspense keeps that dynamic hole streamable instead of blocking
+          the whole route. */}
+      <Suspense fallback={<ShellFallback />}>
+        <LobbyShell>{children}</LobbyShell>
+      </Suspense>
+    </ShellProviders>
   );
 }
 
-function LobbyShell({ children }: { children: React.ReactNode }) {
+async function LobbyShell({ children }: { children: React.ReactNode }) {
+  const { userId } = await auth();
+
+  const settings = userId ? await getUserSettings(userId) : null;
+  const locale: Locale = isLocale(settings?.language)
+    ? settings.language
+    : DEFAULT_LOCALE;
+  const timezone = settings?.timezone ?? "UTC";
+
   return (
     <div className="flex min-h-screen">
-      <Sidebar />
+      <Sidebar locale={locale} />
       <div className="flex flex-1 flex-col">
         <header className="flex h-14 items-center justify-end gap-2 border-b border-border px-6">
-          <UserMenu />
+          <UserMenu locale={locale} />
         </header>
         <main className="flex-1 p-6 sm:p-10">{children}</main>
       </div>
-      <SettingsModalMount />
+      <SettingsModal locale={locale} timezone={timezone} />
     </div>
   );
 }
 
-// SettingsModal needs the open state from the shared store. Rendered here
-// (not in the sidebar) so both the sidebar and the user menu can trigger it
-// through the same store. The dialog uses a fixed-position portal, so its
-// mount point doesn't affect layout.
-function SettingsModalMount() {
-  const { settingsOpen, setSettingsOpen } = useSettings();
+/** Skeleton shown while the session + settings resolve. */
+function ShellFallback() {
   return (
-    <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
+    <div className="flex min-h-screen">
+      <div className="hidden w-64 shrink-0 border-r border-border bg-card lg:block" />
+      <div className="flex flex-1 flex-col">
+        <header className="h-14 border-b border-border" />
+        <main className="flex-1 p-6 sm:p-10" />
+      </div>
+    </div>
   );
 }

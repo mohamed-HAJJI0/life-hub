@@ -22,7 +22,7 @@ import {
   type ReactNode,
 } from "react";
 
-type SettingsTab = "profile" | "theme";
+type SettingsTab = "profile" | "theme" | "language" | "timezone";
 
 type SettingsContextValue = {
   settingsOpen: boolean;

@@ -40,6 +40,11 @@ export function getDictionary(locale: string): Dictionary {
   return DICTIONARIES[isLocale(locale) ? locale : DEFAULT_LOCALE];
 }
 
+/** Resolve a stored language value to a supported locale. */
+export function resolveLocale(language: string | undefined | null): Locale {
+  return isLocale(language) ? language : DEFAULT_LOCALE;
+}
+
 /** Look up a key. Missing keys render as the key itself, so gaps are visible. */
 export function t(dict: Dictionary, key: string): string {
   return dict[key] ?? key;

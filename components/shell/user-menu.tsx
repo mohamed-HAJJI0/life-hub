@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/menu";
 import { useSettings } from "@/components/shell/settings-store";
 import { cn } from "@/lib/utils";
+import { getDictionary, t, type Locale } from "@/lib/i18n";
 
 function getInitials(user: {
   firstName: string | null;
@@ -49,10 +50,11 @@ function getInitials(user: {
   return email.slice(0, 2).toUpperCase() || "?";
 }
 
-export function UserMenu() {
+export function UserMenu({ locale }: { locale: Locale }) {
   const { user, isSignedIn, isLoaded } = useUser();
   const clerk = useClerk();
   const { openSettings } = useSettings();
+  const dict = getDictionary(locale);
 
   // Track which action to run after the menu finishes closing — set in
   // onClick, executed in onOpenChangeComplete. This guarantees the menu
@@ -89,7 +91,7 @@ export function UserMenu() {
   return (
     <Menu
       open={menuOpen}
-      onOpenChange={(open, event) => {
+      onOpenChange={(open) => {
         setMenuOpen(open);
         // Click-outside / Escape → no pending action.
         if (open) pendingActionRef.current = null;
@@ -103,7 +105,7 @@ export function UserMenu() {
       }}
     >
       <MenuTrigger
-        aria-label="Open user menu"
+        aria-label={t(dict, "userMenu.open")}
         className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
       >
         <Avatar src={user.imageUrl} alt={name} initials={initials} />
@@ -138,7 +140,7 @@ export function UserMenu() {
               }}
             >
               <SettingsIcon className="size-4" />
-              <span>Manage account</span>
+              <span>{t(dict, "userMenu.manageAccount")}</span>
             </MenuItem>
 
             <MenuSeparator />
@@ -151,7 +153,7 @@ export function UserMenu() {
               }}
             >
               <LogOut className="size-4" />
-              <span>Sign out</span>
+              <span>{t(dict, "userMenu.signOut")}</span>
             </MenuItem>
           </MenuPopup>
         </MenuPositioner>

@@ -24,18 +24,29 @@
 // Per `AGENTS.md` §5: shell sub-components live in `components/shell/`.
 
 import { UserProfile } from "@clerk/nextjs";
-import { Palette } from "lucide-react";
+import { Globe, Palette, Clock } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { ThemeTabContent } from "@/components/shell/settings-tabs/theme-tab-content";
+import { LanguageTabContent } from "@/components/shell/settings-tabs/language-tab-content";
+import { TimezoneTabContent } from "@/components/shell/settings-tabs/timezone-tab-content";
+import { useSettings } from "@/components/shell/settings-store";
+import { getDictionary, t, type Locale } from "@/lib/i18n";
 
-type SettingsModalProps = {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-};
+export function SettingsModal({
+  locale,
+  timezone,
+}: {
+  locale: Locale;
+  timezone: string;
+}) {
+  // The open state lives in the shared settings store so the sidebar's
+  // Settings button and the user menu's "Manage account" item open the
+  // same modal.
+  const { settingsOpen, setSettingsOpen } = useSettings();
+  const dict = getDictionary(locale);
 
-export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
       <DialogContent
         // sm:max-w-4xl (not just max-w-4xl) overrides shadcn's default
         // sm:max-w-sm/sm:max-w-lg on the DialogContent base classes —
@@ -57,7 +68,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
             for screen readers, but Clerk's <UserProfile> has its own
             visible header. We give it a heading so the dialog is announced
             correctly. */}
-        <DialogTitle className="sr-only">Settings</DialogTitle>
+        <DialogTitle className="sr-only">{t(dict, "settings.title")}</DialogTitle>
 
         <UserProfile
           routing="hash"
@@ -101,11 +112,25 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
           }}
         >
           <UserProfile.Page
-            label="Theme"
+            label={t(dict, "settings.tab.theme")}
             labelIcon={<Palette className="size-4" />}
             url="theme"
           >
             <ThemeTabContent />
+          </UserProfile.Page>
+          <UserProfile.Page
+            label={t(dict, "settings.tab.language")}
+            labelIcon={<Globe className="size-4" />}
+            url="language"
+          >
+            <LanguageTabContent locale={locale} />
+          </UserProfile.Page>
+          <UserProfile.Page
+            label={t(dict, "settings.tab.timezone")}
+            labelIcon={<Clock className="size-4" />}
+            url="timezone"
+          >
+            <TimezoneTabContent locale={locale} timezone={timezone} />
           </UserProfile.Page>
         </UserProfile>
       </DialogContent>

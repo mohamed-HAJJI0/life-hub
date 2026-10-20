@@ -223,3 +223,29 @@ function getTimezoneOffsetMs(timezone: string, now: Date): number {
 
   return asUtc - now.getTime();
 }
+
+/**
+ * A human-readable UTC offset for a zone, e.g. "UTC+08:00".
+ *
+ * Shown next to the timezone picker so the user can confirm the zone they
+ * picked is the one they meant (a common mistake: picking a city with the
+ * same name in the wrong region).
+ */
+export function timezoneOffsetLabel(
+  timezone: string,
+  now: Date = new Date(),
+): string {
+  let offsetMs: number;
+  try {
+    offsetMs = getTimezoneOffsetMs(timezone, now);
+  } catch {
+    return "UTC";
+  }
+
+  const sign = offsetMs < 0 ? "-" : "+";
+  const totalMinutes = Math.abs(Math.round(offsetMs / 60_000));
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return `UTC${sign}${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+}

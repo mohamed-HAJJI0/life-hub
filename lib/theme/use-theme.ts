@@ -12,12 +12,14 @@
 // come from the static CSS.
 //
 // SSR-safety:
-//   - useState(DEFAULT_CONFIG) makes the server and first client render match.
+//   - useSyncExternalStore's getServerSnapshot returns DEFAULT_CONFIG, so
+//     the server and first client render match.
 //   - The no-FOUC <script> in <head> applies the user's saved attributes
 //     before paint.
-//   - On mount, the hook re-reads from localStorage and syncs React state.
+//   - After hydration the store re-reads from localStorage and the DOM is
+//     re-applied from the resolved config.
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useSyncExternalStore } from "react";
 import { STORAGE_KEY } from "./constants";
 import { migrateStored } from "./migration";
 
@@ -38,15 +40,27 @@ const DEFAULT_CONFIG: ThemeConfig = {
   modePref: "system",
 };
 
+// `useSyncExternalStore` requires getSnapshot to return a *stable* value —
+// a fresh object every call would loop forever. So we memoise the parsed
+// config against the raw localStorage string: same raw → same object.
+let cachedRaw: string | null = null;
+let cachedConfig: ThemeConfig = DEFAULT_CONFIG;
+
 function readStored(): ThemeConfig {
   if (typeof window === "undefined") return DEFAULT_CONFIG;
+
+  let raw: string | null = null;
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return DEFAULT_CONFIG;
-    return migrateStored(raw) ?? DEFAULT_CONFIG;
+    raw = window.localStorage.getItem(STORAGE_KEY);
   } catch {
     return DEFAULT_CONFIG;
   }
+
+  if (raw === cachedRaw) return cachedConfig;
+
+  cachedRaw = raw;
+  cachedConfig = raw ? (migrateStored(raw) ?? DEFAULT_CONFIG) : DEFAULT_CONFIG;
+  return cachedConfig;
 }
 
 function writeStored(cfg: ThemeConfig) {
@@ -56,6 +70,29 @@ function writeStored(cfg: ThemeConfig) {
   } catch {
     // best-effort
   }
+}
+
+/**
+ * Fired whenever *this* tab writes the theme. The native `storage` event
+ * only fires in *other* tabs, so we need our own for same-tab updates.
+ */
+const THEME_EVENT = "life-hub:theme-changed";
+
+function subscribeTheme(onStoreChange: () => void) {
+  window.addEventListener("storage", onStoreChange);
+  window.addEventListener(THEME_EVENT, onStoreChange);
+  return () => {
+    window.removeEventListener("storage", onStoreChange);
+    window.removeEventListener(THEME_EVENT, onStoreChange);
+  };
+}
+
+function getThemeSnapshot(): ThemeConfig {
+  return readStored();
+}
+
+function getThemeServerSnapshot(): ThemeConfig {
+  return DEFAULT_CONFIG;
 }
 
 /** Resolve the user's modePref to a concrete mode using the OS preference. */
@@ -86,17 +123,18 @@ function applyToDom(cfg: ThemeConfig) {
 }
 
 export function useTheme() {
-  const [config, setConfig] = useState<ThemeConfig>(DEFAULT_CONFIG);
+  const config = useSyncExternalStore(
+    subscribeTheme,
+    getThemeSnapshot,
+    getThemeServerSnapshot,
+  );
 
-  // Hydrate from localStorage on mount; the no-FOUC script already wrote
-  // the attributes, this just keeps React state in sync.
+  // Re-apply to the DOM whenever the resolved config changes. The no-FOUC
+  // script already wrote the attributes before paint; this keeps React state
+  // and the DOM in sync (and covers the case where the script didn't run).
   useEffect(() => {
-    const stored = readStored();
-    setConfig(stored);
-    // Re-apply in case the script didn't run (e.g. in a future mode where
-    // we don't ship it).
-    applyToDom(stored);
-  }, []);
+    applyToDom(config);
+  }, [config]);
 
   // Listen for OS color-scheme changes when the user is on "system" mode,
   // and re-apply so the `.dark` class and `data-mode` flip together.
@@ -108,15 +146,15 @@ export function useTheme() {
     };
     mql.addEventListener?.("change", onChange);
     return () => mql.removeEventListener?.("change", onChange);
-  }, [config.modePref]);
+  }, [config]);
 
   const update = useCallback((patch: Partial<ThemeConfig>) => {
-    setConfig((current) => {
-      const next: ThemeConfig = { ...current, ...patch };
-      applyToDom(next);
-      writeStored(next);
-      return next;
-    });
+    const next: ThemeConfig = { ...readStored(), ...patch };
+    applyToDom(next);
+    writeStored(next);
+    // Tell our own store the value changed. `readStored` re-parses because
+    // the raw string differs from the memoised one.
+    window.dispatchEvent(new Event(THEME_EVENT));
   }, []);
 
   const setBase = useCallback((base: string) => update({ base }), [update]);

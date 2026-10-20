@@ -1,11 +1,14 @@
 // Home dashboard — first page after sign-in. Today it's a skeleton; the
 // real dashboard (today's reviews, streak, modules) lands in a later
 // milestone. The chart card is here as a temporary visual anchor for the
-// theme editor so users (and reviewers) can see the live chart-1..5
-// colors while picking a theme.
+// theme editor so users (and reviewers) can see the live chart-1..5 colors
+// while picking a theme.
 //
 // Per `AGENTS.md` §5: home dashboard lives at `app/(lobby)/page.tsx`
 // (route group, no URL segment).
+//
+// Note: the shell already renders a <main> landmark, so this page uses a
+// plain <div> — nesting two <main> elements is invalid HTML.
 
 import {
   Card,
@@ -14,26 +17,32 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { getCurrentUserSettings } from "@/lib/settings";
+import { getDictionary, resolveLocale, t } from "@/lib/i18n";
 
-export default function Home() {
+export default async function Home() {
+  const settings = await getCurrentUserSettings();
+  const dict = getDictionary(resolveLocale(settings.language));
+
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col gap-6 p-6 sm:p-10">
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
       <header className="space-y-1">
-        <h1 className="text-3xl font-semibold tracking-tight">Welcome</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">
+          {t(dict, "home.title")}
+        </h1>
         <p className="text-sm text-muted-foreground">
-          The home dashboard is a skeleton — modules land in a later milestone.
+          {t(dict, "home.subtitle")}
         </p>
       </header>
 
       <section className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">What's next</CardTitle>
+            <CardTitle className="text-base">
+              {t(dict, "home.empty.title")}
+            </CardTitle>
             <CardDescription>
-              Open the user menu (top right) → Manage account → Theme to
-              try the shadcn-style theme editor. The chart on the right
-              previews <code className="font-mono text-xs">chart-1..5</code>{" "}
-              in real time.
+              {t(dict, "home.empty.description")}
             </CardDescription>
           </CardHeader>
         </Card>
@@ -44,7 +53,7 @@ export default function Home() {
             dev-only route) once the theme editor is verified. */}
         <ChartPreviewCard />
       </section>
-    </main>
+    </div>
   );
 }
 

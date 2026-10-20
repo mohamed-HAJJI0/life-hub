@@ -1,4 +1,5 @@
 import { cacheLife, cacheTag } from "next/cache";
+import { auth } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
 import { settings, users } from "@/lib/db/schema";
@@ -44,6 +45,19 @@ export async function getUserSettings(userId: string): Promise<UserSettings> {
   if (!row) return DEFAULT_USER_SETTINGS;
 
   return { language: row.language, timezone: row.timezone };
+}
+
+/**
+ * The signed-in user's settings, or the defaults.
+ *
+ * `auth()` is a dynamic API, so this cannot live inside the cached
+ * `getUserSettings` — it resolves the user first, then calls the cached
+ * read. Cheap: the second call hits the cache.
+ */
+export async function getCurrentUserSettings(): Promise<UserSettings> {
+  const { userId } = await auth();
+  if (!userId) return DEFAULT_USER_SETTINGS;
+  return getUserSettings(userId);
 }
 
 /**
