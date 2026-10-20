@@ -1,0 +1,39 @@
+{
+  "app.name": "Life Hub",
+  "app.lobby": "大厅",
+
+  "nav.home": "首页",
+  "nav.today": "今日",
+  "nav.settings": "设置",
+  "nav.collapse": "收起",
+  "nav.expand": "展开",
+  "nav.primary": "主导航",
+
+  "home.title": "欢迎",
+  "home.subtitle": "你的生活仪表盘。",
+  "home.empty.title": "这里还是空的",
+  "home.empty.description": "模块添加后会显示在这里。",
+
+  "today.title": "今日",
+  "today.subtitle": "所有生活领域中今天需要处理的事项。",
+  "today.empty": "今天没有待办事项。",
+
+  "settings.title": "设置",
+  "settings.tab.theme": "主题",
+  "settings.tab.language": "语言",
+  "settings.tab.timezone": "时区",
+
+  "settings.language.description": "Life Hub 界面使用的语言。",
+  "settings.timezone.description": "用于计算每日连续天数以及“今天到期”的判断。",
+  "settings.timezone.autoDetect": "自动检测",
+  "settings.timezone.current": "当前时区",
+
+  "userMenu.open": "打开用户菜单",
+  "userMenu.manageAccount": "管理账户",
+  "userMenu.signOut": "退出登录",
+
+  "common.save": "保存",
+  "common.saving": "保存中…",
+  "common.saved": "已保存",
+  "common.cancel": "取消"
+}

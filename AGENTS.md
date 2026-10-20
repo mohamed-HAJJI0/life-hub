@@ -246,5 +246,5 @@ implemented in step 2 — see `plans/2026-10-20_1645-module-registry-and-per-app
 - **Files:** lowercase, kebab-case for routes/queries; PascalCase for React components
 - **DB tables:** `<module>_<entity>` — `chinese_characters`, `chinese_reviews`, `tasks_items`
 - **TS types:** PascalCase, no `I` prefix (`ModuleDef`, not `IModuleDef`)
-- **Migrations:** `NNNN_<name>.sql` starting at `0001_`, sequential, never edited after merge
+- **Migrations:** `NNNN_<name>.sql` — drizzle-kit numbers from `0000_`; sequential, never edited after merge. Each file has a sibling snapshot in `db/migrations/meta/` — commit both.
 - **Plans:** `plans/YYYY-MM-DD_HHMM-<name>.md`
