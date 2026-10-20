@@ -33,8 +33,17 @@
   "chinese.subtitle": "你的汉字词库。",
   "chinese.nav.primary": "中文导航",
   "chinese.nav.overview": "概览",
+  "chinese.nav.dictionary": "词典",
   "chinese.empty.title": "这里还是空的",
   "chinese.empty.description": "添加第一个汉字，开始每日复习。",
+
+  "chinese.dictionary.title": "词典",
+  "chinese.dictionary.subtitle": "共 125,271 条 — 可用汉字、拼音或释义搜索。",
+  "chinese.dictionary.search.label": "搜索词典",
+  "chinese.dictionary.search.placeholder": "汉字、拼音或释义…",
+  "chinese.dictionary.empty": "没有找到匹配项。",
+  "chinese.dictionary.loading": "加载中…",
+  "chinese.dictionary.error": "无法加载词典。",
 
   "settings.title": "设置",
   "settings.tab.theme": "主题",

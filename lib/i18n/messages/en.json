@@ -33,8 +33,17 @@
   "chinese.subtitle": "Your Chinese character vocabulary.",
   "chinese.nav.primary": "Chinese navigation",
   "chinese.nav.overview": "Overview",
+  "chinese.nav.dictionary": "Dictionary",
   "chinese.empty.title": "Nothing here yet",
   "chinese.empty.description": "Add your first character to start the daily review.",
+
+  "chinese.dictionary.title": "Dictionary",
+  "chinese.dictionary.subtitle": "125,271 entries — search by character, pinyin or meaning.",
+  "chinese.dictionary.search.label": "Search the dictionary",
+  "chinese.dictionary.search.placeholder": "Character, pinyin or meaning…",
+  "chinese.dictionary.empty": "No matches.",
+  "chinese.dictionary.loading": "Loading…",
+  "chinese.dictionary.error": "Could not load the dictionary.",
 
   "settings.title": "Settings",
   "settings.tab.theme": "Theme",

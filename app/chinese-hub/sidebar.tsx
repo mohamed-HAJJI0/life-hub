@@ -21,6 +21,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   ArrowLeft,
+  BookOpen,
   ChevronsLeft,
   ChevronsRight,
   Languages,
@@ -51,6 +52,11 @@ export function ChineseHubSidebar({ locale }: { locale: Locale }) {
       href: "/chinese-hub",
       label: t(dict, "chinese.nav.overview"),
       icon: Languages,
+    },
+    {
+      href: "/chinese-hub/dictionary",
+      label: t(dict, "chinese.nav.dictionary"),
+      icon: BookOpen,
     },
   ];
 
