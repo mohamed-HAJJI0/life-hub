@@ -4,6 +4,7 @@
 
   "nav.home": "首页",
   "nav.today": "今日",
+  "nav.gallery": "画廊",
   "nav.settings": "设置",
   "nav.collapse": "收起",
   "nav.expand": "展开",
@@ -17,6 +18,12 @@
   "today.title": "今日",
   "today.subtitle": "所有生活领域中今天需要处理的事项。",
   "today.empty": "今天没有待办事项。",
+
+  "gallery.title": "画廊",
+  "gallery.subtitle": "来自各个生活领域的照片和图片。",
+  "gallery.card.title": "示例图片",
+  "gallery.card.description": "占位卡片，展示画廊项目的样子。",
+  "gallery.card.imageAlt": "柔和渐变的占位图",
 
   "settings.title": "设置",
   "settings.tab.theme": "主题",

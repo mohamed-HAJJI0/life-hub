@@ -6,7 +6,7 @@
 //
 // Layout (top → bottom):
 //   - Logo block ("LH" badge + "Life Hub" / "Lobby" label; label hidden when collapsed)
-//   - Top nav: Home, Today
+//   - Top nav: Home, Today, Gallery
 //   - Spacer (`flex-1`) — pushes the bottom group down
 //   - Bottom group:
 //       - Settings link (per the user's request: Settings sits at the bottom)
@@ -41,6 +41,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Home,
+  LayoutGrid,
   Settings as SettingsIcon,
   type LucideIcon,
 } from "lucide-react";
@@ -95,6 +96,7 @@ export function Sidebar({ locale }: { locale: Locale }) {
   const topNav: NavItem[] = [
     { href: "/", label: t(dict, "nav.home"), icon: Home },
     { href: "/today", label: t(dict, "nav.today"), icon: CalendarDays },
+    { href: "/gallery", label: t(dict, "nav.gallery"), icon: LayoutGrid },
   ];
 
   const toggle = useCallback(() => {

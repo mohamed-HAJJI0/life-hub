@@ -4,6 +4,7 @@
 
   "nav.home": "Home",
   "nav.today": "Today",
+  "nav.gallery": "Gallery",
   "nav.settings": "Settings",
   "nav.collapse": "Collapse",
   "nav.expand": "Expand",
@@ -17,6 +18,12 @@
   "today.title": "Today",
   "today.subtitle": "What needs attention across all your life areas.",
   "today.empty": "No items due.",
+
+  "gallery.title": "Gallery",
+  "gallery.subtitle": "Photos and images from your life areas.",
+  "gallery.card.title": "Sample image",
+  "gallery.card.description": "A placeholder card showing how gallery items will look.",
+  "gallery.card.imageAlt": "Placeholder image of a soft gradient",
 
   "settings.title": "Settings",
   "settings.tab.theme": "Theme",
