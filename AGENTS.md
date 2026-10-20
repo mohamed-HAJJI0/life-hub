@@ -46,24 +46,26 @@ The Life Hub project has its own planning lives in a dedicated, **gitignored** f
 
 - **Folder:** `/plans/` (entire folder is in `.gitignore`)
 - **Filename convention:** every plan starts with the date and time it was added: `YYYY-MM-DD_HHMM-<plan-name>.md`
+- **The checklist itself is tracked at the repo root:** `main todolist.md` — sections 1–5 (foundation, module architecture, shared systems, dev hygiene, build order). It is the single source of truth for what still needs doing; this list points at the working plans.
 - **When to check:** before starting any non-trivial work, list `/plans/` and read the most recent (and any directly relevant) plan first.
 - **When to write:** when a plan is approved (this session or a previous one), save it as a dated file in `/plans/` and add it to the list below.
 
 ### Current plans
 
-- `plans/2026-10-16_1608-project-organizing-todolist.md` — full checklist (sections 1–5: foundation, module architecture, shared systems, dev hygiene, build order)
+- `main todolist.md` (repo root) — **the full checklist** (sections 1–5: foundation, module architecture, shared systems, dev hygiene, build order) and the single source of truth for what still needs doing
 - `plans/2026-10-16_1608-project-plan-and-structure.md` — implementation order, file/folder organization, smallest viable cut for step 1
 - `plans/2026-10-16_1810-install-shadcn-ui-and-theme.md` — shadcn/ui install (baseColor: taupe, preset `b2BXFGesy`) + runtime theme system (`lib/theme/`, localStorage key `life-hub:theme`, no-FOUC inline script)
 - `plans/2026-10-16_1838-clerk-auth-and-lobby-shell.md` — Clerk auth (`@clerk/nextjs`, accountless dev, `proxy.ts` gate), `app/(lobby)/` shell + `app/(auth)/` pages, shadcn theme for Clerk components
 - `plans/2026-10-16_1915-collapsible-sidebar-and-unified-settings.md` — collapsible sidebar (`components/shell/sidebar.tsx`, localStorage `life-hub:sidebar-collapsed`) + unified `/settings` (Clerk `<UserProfile />` reached from sidebar and from `UserButton`'s "Manage account" via `userProfileUrl="/settings"`) — **superseded by `2026-10-16_1935-floating-userprofile-modal.md`** (no page, modal only)
 - `plans/2026-10-16_1935-floating-userprofile-modal.md` — Settings button calls `useClerk().openUserProfile()` to open Clerk's `<UserProfile />` as a floating modal; no `/settings` page
 - `plans/2026-10-16_2155-shadcn-theme-editor.md` — shadcn-style theme editor: 7 bases × 24 accents × 24 charts × light/dark/system, sourced from the live registry (`lib/theme/shadcn-data.json` + auto-generated `app/theme-tokens.css`), verified by `scripts/verify-theme-tokens.mjs` (174 PASS / 0 FAIL)
-- `plans/2026-10-20_1640-db-layer-and-settings.md` — **step 1 close-out**: Neon Postgres + Drizzle data layer (`lib/db/`, `db/migrations/0000_init.sql`), DB-backed language + timezone settings, i18n shell, server-component shell
+- `plans/2026-10-20_1640-db-layer-and-settings.md` — **step 1 close-out**: Neon Postgres + Drizzle data layer (`lib/db/`, `db/migrations/0000_baseline.sql` + `0001_add_auth_id.sql` + `0002_add_settings.sql`), DB-backed language + timezone settings, i18n shell, server-component shell
 - `plans/2026-10-20_1645-module-registry-and-per-app-modules.md` — **PROPOSED (step 2, not yet approved)**: per-app `modules/` folders + per-app `_registry.ts`
+- `plans/2026-10-20_1805-drop-tags-and-db-theme.md` — **APPLIED**: drop the unused `tags` table + move the theme into `settings` (4 columns) with `localStorage` kept as the per-device override; also fixed a long-standing no-FOUC script syntax error (locked in by `scripts/test-theme-script.mjs`)
 
 ### Hard rule
 
-**Before planning any feature or refactor in this repo, read the current plans in `/plans/`.** If a new plan supersedes or extends an old one, write the new one with a fresh date-time prefix and update this list — do not silently edit or delete the old plan.
+**Before planning any feature or refactor in this repo, read `main todolist.md` and the current plans in `/plans/`.** If a new plan supersedes or extends an old one, write the new one with a fresh date-time prefix and update this list — do not silently edit or delete the old plan.
 
 ## 5. File organization (where things go)
 
